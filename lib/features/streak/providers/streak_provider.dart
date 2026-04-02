@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StreakState {
   final int currentStreak;
@@ -91,6 +92,9 @@ class StreakNotifier extends StateNotifier<StreakState> {
     final box = Hive.box('dhikr_sessions');
     box.put('active_dates', updated.toList());
 
+    // Sync to Supabase (fire-and-forget, local-first)
+    _syncPresenceToSupabase(today);
+
     // Recalculate streak
     int streak = 0;
     DateTime check = DateTime.now();
@@ -131,6 +135,23 @@ class StreakNotifier extends StateNotifier<StreakState> {
   }
 
   static String _todayKey() => StreakState._dateKey(DateTime.now());
+
+  /// Fire-and-forget sync to Supabase
+  Future<void> _syncPresenceToSupabase(String dateKey) async {
+    try {
+      final client = Supabase.instance.client;
+      final user = client.auth.currentUser;
+      if (user == null) return;
+
+      await client.from('daily_presence').upsert({
+        'user_id': user.id,
+        'date': dateKey,
+        'active': true,
+      });
+    } catch (_) {
+      // Offline or not configured — local data is source of truth
+    }
+  }
 }
 
 final streakProvider = StateNotifierProvider<StreakNotifier, StreakState>((ref) {

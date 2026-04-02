@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/theme.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../providers/groups_provider.dart';
@@ -502,12 +503,29 @@ class _CircleCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            circle.presenceSummary,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: ZikrColors.inkMuted,
-            ),
+          Row(
+            children: [
+              Text(
+                circle.presenceSummary,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: ZikrColors.inkMuted,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  Share.share(
+                    'Join my dhikr circle "${circle.name}" on Zikr Vibe!\n\n'
+                    'Invite code: ${circle.inviteCode}\n\n'
+                    'Download: https://zikrvibe.com',
+                    subject: 'Join ${circle.name} on Zikr Vibe',
+                  );
+                },
+                child: const Icon(Icons.share_outlined,
+                    size: 18, color: ZikrColors.inkMuted),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           for (final member in circle.members) ...[
