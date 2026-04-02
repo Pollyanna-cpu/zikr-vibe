@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../streak/providers/streak_provider.dart';
+import '../../groups/providers/groups_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -49,34 +51,39 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 32),
 
-            // Stats cards
-            const Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    label: 'Total Dhikr',
-                    value: '0',
-                    icon: Icons.touch_app_rounded,
+            // Stats cards — live data
+            Builder(builder: (context) {
+              final streak = ref.watch(streakProvider);
+              final circles = ref.watch(circlesProvider);
+              final groupCount = circles.valueOrNull?.length ?? 0;
+              return Row(
+                children: [
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Total Dhikr',
+                      value: '${streak.lifetimeTotal}',
+                      icon: Icons.touch_app_rounded,
+                    ),
                   ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Streak',
-                    value: '0 days',
-                    icon: Icons.local_fire_department_rounded,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Streak',
+                      value: '${streak.currentStreak}d',
+                      icon: Icons.local_fire_department_rounded,
+                    ),
                   ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Groups',
-                    value: '0',
-                    icon: Icons.group_rounded,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Groups',
+                      value: '$groupCount',
+                      icon: Icons.group_rounded,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              );
+            }),
 
             const SizedBox(height: 32),
 
