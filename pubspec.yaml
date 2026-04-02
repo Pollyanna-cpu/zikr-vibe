@@ -55,7 +55,7 @@ dependencies:
   geocoding: ^3.0.0
 
   # Prayer times (offline calculation, 12 methods)
-  # adhan_dart: ^1.2.0  # Add when building for mobile
+  adhan_dart: ^1.2.0
 
   # Screen awake during counting
   wakelock_plus: ^1.2.8

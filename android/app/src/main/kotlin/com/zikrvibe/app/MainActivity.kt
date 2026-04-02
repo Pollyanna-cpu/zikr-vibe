@@ -1,4 +1,4 @@
-package com.example.zikr_vibe
+package com.zikrvibe.app
 
 import io.flutter.embedding.android.FlutterActivity
 

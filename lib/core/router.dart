@@ -8,6 +8,7 @@ import '../features/dhikr/screens/dhikr_screen.dart';
 import '../features/groups/screens/groups_screen.dart';
 import '../features/prayer/screens/prayer_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
+import '../features/streak/screens/streak_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -53,6 +54,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/profile',
             builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: '/streak',
+            builder: (context, state) => const StreakScreen(),
           ),
         ],
       ),
