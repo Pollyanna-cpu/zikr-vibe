@@ -1,7 +1,8 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme.dart';
+import '../../../core/router.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -27,35 +28,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _signInWithApple() async {
-    setState(() => _isLoading = true);
-    try {
-      await ref.read(authServiceProvider).signInWithApple();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign in failed: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true);
-    try {
-      await ref.read(authServiceProvider).signInWithGoogle();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign in failed: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+  // TODO: Re-enable when OAuth providers are configured in Supabase
+  // Future<void> _signInWithApple() async { ... }
+  // Future<void> _signInWithGoogle() async { ... }
 
   Future<void> _submitEmail() async {
     final email = _emailController.text.trim();
@@ -119,7 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your dhikr. Your hands. Your count.',
+                'Count your dhikr. Nothing else watches.',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -127,35 +102,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const Spacer(),
 
               if (!_showEmailForm) ...[
-                // Apple Sign In
-                if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS)
-                  _SocialButton(
-                    onPressed: _isLoading ? null : _signInWithApple,
-                    icon: Icons.apple,
-                    label: 'Continue with Apple',
-                    backgroundColor: ZikrColors.ink,
-                    foregroundColor: Colors.white,
-                  ),
-                if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) const SizedBox(height: 12),
-
-                // Google Sign In
-                _SocialButton(
-                  onPressed: _isLoading ? null : _signInWithGoogle,
-                  icon: Icons.g_mobiledata_rounded,
-                  label: 'Continue with Google',
-                  backgroundColor: Colors.white,
-                  foregroundColor: ZikrColors.ink,
-                  border: true,
-                ),
-                const SizedBox(height: 12),
-
-                // Email
+                // Email (primary — always works)
                 _SocialButton(
                   onPressed: () => setState(() => _showEmailForm = true),
                   icon: Icons.email_outlined,
                   label: 'Continue with Email',
-                  backgroundColor: ZikrColors.emerald.withValues(alpha: 0.1),
-                  foregroundColor: ZikrColors.emerald,
+                  backgroundColor: ZikrColors.emerald,
+                  foregroundColor: Colors.white,
+                ),
+                const SizedBox(height: 12),
+
+                // Apple Sign In (coming soon — hidden until OAuth configured)
+                // TODO: unhide when Apple OAuth is configured in Supabase
+
+                // Google Sign In (coming soon — hidden until OAuth configured)
+                // TODO: unhide when Google OAuth is configured in Supabase
+
+                // Skip — use without account
+                TextButton(
+                  onPressed: () {
+                    skipAuth(ref);
+                    if (context.mounted) context.go('/dhikr');
+                  },
+                  child: const Text(
+                    'Use without an account',
+                    style: TextStyle(
+                      color: ZikrColors.inkMuted,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
               ] else ...[
                 // Email form
@@ -233,15 +208,12 @@ class _SocialButton extends StatelessWidget {
   final String label;
   final Color backgroundColor;
   final Color foregroundColor;
-  final bool border;
-
   const _SocialButton({
     required this.onPressed,
     required this.icon,
     required this.label,
     required this.backgroundColor,
     required this.foregroundColor,
-    this.border = false,
   });
 
   @override
@@ -259,9 +231,7 @@ class _SocialButton extends StatelessWidget {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: border
-                ? const BorderSide(color: ZikrColors.divider)
-                : BorderSide.none,
+            side: BorderSide.none,
           ),
         ),
       ),

@@ -4,6 +4,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme.dart';
+import '../../../core/prayer_api_service.dart';
 
 final prayerDataProvider = FutureProvider<_PrayerData>((ref) async {
   double lat = 25.2048;
@@ -30,8 +31,59 @@ final prayerDataProvider = FutureProvider<_PrayerData>((ref) async {
     }
   }
 
+  // Try Aladhan API first, fall back to local adhan_dart
+  final apiTimes = await PrayerApiService.fetchByCoordinates(lat, lng);
+  if (apiTimes != null) {
+    return _buildFromApi(apiTimes, lat, lng, locationName);
+  }
   return _calculatePrayers(lat, lng, locationName);
 });
+
+_PrayerData _buildFromApi(
+  Map<String, String> timings, double lat, double lng, String locationName,
+) {
+  final now = DateTime.now();
+  final timeFormat = DateFormat('hh:mm a');
+  final prayerNames = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+  // Parse API times (HH:mm format) into DateTime for comparison
+  DateTime? nextPrayerTime;
+  String? nextPrayerName;
+  final List<_PrayerTime> prayers = [];
+
+  for (final name in prayerNames) {
+    final raw = timings[name] ?? '00:00';
+    final parts = raw.split(':');
+    final h = int.tryParse(parts[0]) ?? 0;
+    final m = int.tryParse(parts[1]) ?? 0;
+    final dt = DateTime(now.year, now.month, now.day, h, m);
+    final formatted = timeFormat.format(dt);
+    final isNext = dt.isAfter(now) &&
+        (nextPrayerTime == null || dt.isBefore(nextPrayerTime));
+    if (isNext) {
+      nextPrayerTime = dt;
+      nextPrayerName = name;
+    }
+    prayers.add(_PrayerTime(name, formatted, false));
+  }
+
+  // Mark next prayer
+  for (int i = 0; i < prayers.length; i++) {
+    if (prayers[i].name == nextPrayerName) {
+      prayers[i] = _PrayerTime(prayers[i].name, prayers[i].time, true);
+    }
+  }
+
+  final coordinates = Coordinates(lat, lng);
+  final qiblaDirection = Qibla.qibla(coordinates);
+
+  return _PrayerData(
+    prayers: prayers,
+    locationName: locationName,
+    qiblaDirection: qiblaDirection,
+    method: 'Umm al-Qura (Aladhan API)',
+  );
+}
 
 _PrayerData _calculatePrayers(double lat, double lng, String locationName) {
   final coordinates = Coordinates(lat, lng);

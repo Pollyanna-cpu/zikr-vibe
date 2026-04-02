@@ -28,6 +28,9 @@ dependencies:
   # Keep Hive for web dev/testing. Use ObjectBox for iOS/Android release.
   # Migration will happen when building for mobile.
 
+  # HTTP
+  http: ^1.2.1
+
   # Auth
   sign_in_with_apple: ^6.1.0
   google_sign_in: ^6.2.1
