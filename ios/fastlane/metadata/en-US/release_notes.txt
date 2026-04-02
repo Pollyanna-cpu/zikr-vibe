@@ -1,0 +1,7 @@
+Assalamu Alaikum! Welcome to Zikr Vibe.
+- Distraction-free dhikr counter with haptic milestones at 33/66/99
+- 33-bead progress visualization
+- Dhikr circles: see who showed up today (no rankings)
+- Prayer times with Qibla direction
+- Streak tracking with calendar view
+- Privacy-first: all counts stay on your device
