@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme.dart';
+import '../../../features/auth/providers/auth_provider.dart';
+import '../providers/groups_provider.dart';
+import '../models/circle_model.dart';
 
 /// Companion Circles — presence, not competition
 class GroupsScreen extends ConsumerWidget {
@@ -9,9 +13,8 @@ class GroupsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Demo data — will be replaced with Supabase when configured
-    // ignore: dead_code
-    const hasCircles = false; // TODO: replace with provider
+    final user = ref.watch(currentUserProvider);
+    final circlesAsync = ref.watch(circlesProvider);
 
     return Scaffold(
       backgroundColor: ZikrColors.marble,
@@ -19,10 +22,26 @@ class GroupsScreen extends ConsumerWidget {
         title: const Text('Dhikr Circles'),
         backgroundColor: Colors.transparent,
       ),
-      body: hasCircles
-          ? _CirclesList()
-          : _EmptyState(
-              onCreateCircle: () => _showCreateSheet(context, ref),
+      body: user == null
+          ? _NotLoggedIn()
+          : circlesAsync.when(
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('Error: $err')),
+              data: (circles) => circles.isEmpty
+                  ? _EmptyState(
+                      onCreateCircle: () =>
+                          _showCreateSheet(context, ref),
+                      onJoinCircle: () =>
+                          _showJoinSheet(context, ref),
+                    )
+                  : _CirclesList(
+                      circles: circles,
+                      onCreateCircle: () =>
+                          _showCreateSheet(context, ref),
+                      onJoinCircle: () =>
+                          _showJoinSheet(context, ref),
+                    ),
             ),
     );
   }
@@ -65,7 +84,8 @@ class GroupsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'A private space to be present with family or friends.\nMembers see that you did dhikr today — nothing more.',
+              'A private space to be present with family or friends.\n'
+              'Members see that you did dhikr today — nothing more.',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: ZikrColors.inkSoft,
@@ -96,15 +116,33 @@ class GroupsScreen extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () {
+                onPressed: () async {
                   final name = controller.text.trim();
-                  if (name.isNotEmpty) {
-                    // TODO: Create circle via Supabase
-                    Navigator.pop(ctx);
+                  if (name.isEmpty) return;
+                  final client = ref.read(supabaseClientProvider);
+                  final user = ref.read(currentUserProvider);
+                  if (client == null || user == null) return;
+
+                  final inviteCode =
+                      await createCircle(client, user.id, name);
+                  if (!ctx.mounted) return;
+                  Navigator.pop(ctx);
+
+                  ref.invalidate(circlesProvider);
+
+                  if (inviteCode != null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Circle "$name" created. Configure Supabase to invite friends.'),
+                        content: Text(
+                            'Circle "$name" created! Invite code: $inviteCode'),
                         behavior: SnackBarBehavior.floating,
+                        action: SnackBarAction(
+                          label: 'Copy',
+                          onPressed: () {
+                            Clipboard.setData(
+                                ClipboardData(text: inviteCode));
+                          },
+                        ),
                       ),
                     );
                   }
@@ -131,13 +169,135 @@ class GroupsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _showJoinSheet(BuildContext context, WidgetRef ref) {
+    final controller = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          24, 24, 24,
+          MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36, height: 4,
+                decoration: BoxDecoration(
+                  color: ZikrColors.divider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Join a circle',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: ZikrColors.ink,
+              ),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              style: GoogleFonts.inter(fontSize: 16, letterSpacing: 2),
+              decoration: InputDecoration(
+                hintText: 'Paste invite code',
+                hintStyle: GoogleFonts.inter(
+                    color: ZikrColors.inkMuted, letterSpacing: 0),
+                filled: true,
+                fillColor: ZikrColors.marble,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 14,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () async {
+                  final code = controller.text.trim();
+                  if (code.isEmpty) return;
+                  final client = ref.read(supabaseClientProvider);
+                  final user = ref.read(currentUserProvider);
+                  if (client == null || user == null) return;
+
+                  final success =
+                      await joinCircle(client, user.id, code);
+                  if (!ctx.mounted) return;
+                  Navigator.pop(ctx);
+
+                  ref.invalidate(circlesProvider);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(success
+                          ? 'Joined circle!'
+                          : 'Invalid invite code.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: ZikrColors.emerald,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Join',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-/// Empty state — first time user
+class _NotLoggedIn extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        'Sign in to create or join circles',
+        style: GoogleFonts.inter(color: ZikrColors.inkMuted, fontSize: 15),
+      ),
+    );
+  }
+}
+
 class _EmptyState extends StatelessWidget {
   final VoidCallback onCreateCircle;
+  final VoidCallback onJoinCircle;
 
-  const _EmptyState({required this.onCreateCircle});
+  const _EmptyState({
+    required this.onCreateCircle,
+    required this.onJoinCircle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -147,7 +307,6 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Circle illustration
             Container(
               width: 80,
               height: 80,
@@ -161,9 +320,7 @@ class _EmptyState extends StatelessWidget {
                 color: ZikrColors.emerald,
               ),
             ),
-
             const SizedBox(height: 28),
-
             Text(
               'Dhikr Circles',
               style: GoogleFonts.inter(
@@ -172,9 +329,7 @@ class _EmptyState extends StatelessWidget {
                 color: ZikrColors.ink,
               ),
             ),
-
             const SizedBox(height: 12),
-
             Text(
               'A quiet space to be present with family or friends.\n'
               'See who remembered today — not how much.',
@@ -185,13 +340,11 @@ class _EmptyState extends StatelessWidget {
                 height: 1.6,
               ),
             ),
-
             const SizedBox(height: 8),
-
-            // Privacy note
             Container(
               margin: const EdgeInsets.only(top: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: ZikrColors.goldSoft,
                 borderRadius: BorderRadius.circular(10),
@@ -199,7 +352,8 @@ class _EmptyState extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.lock_outline_rounded, size: 14, color: ZikrColors.gold),
+                  const Icon(Icons.lock_outline_rounded,
+                      size: 14, color: ZikrColors.gold),
                   const SizedBox(width: 8),
                   Text(
                     'Your count stays private. Always.',
@@ -212,13 +366,12 @@ class _EmptyState extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 32),
-
             TextButton(
               onPressed: onCreateCircle,
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                 backgroundColor: ZikrColors.emerald,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -233,13 +386,9 @@ class _EmptyState extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
             TextButton(
-              onPressed: () {
-                // TODO: Join circle by code
-              },
+              onPressed: onJoinCircle,
               child: Text(
                 'Join with invite code',
                 style: GoogleFonts.inter(
@@ -255,19 +404,19 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-/// Mock circle list — preview of what it looks like with data
 class _CirclesList extends StatelessWidget {
+  final List<Circle> circles;
+  final VoidCallback onCreateCircle;
+  final VoidCallback onJoinCircle;
+
+  const _CirclesList({
+    required this.circles,
+    required this.onCreateCircle,
+    required this.onJoinCircle,
+  });
+
   @override
   Widget build(BuildContext context) {
-    // Demo data
-    final circles = [
-      _CircleDemo('Family', 14, [
-        _MemberDemo('Ahmad', true),
-        _MemberDemo('Fatima', true),
-        _MemberDemo('Yusuf', false),
-      ]),
-    ];
-
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
@@ -275,34 +424,35 @@ class _CirclesList extends StatelessWidget {
           _CircleCard(circle: circle),
           const SizedBox(height: 16),
         ],
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: onCreateCircle,
+              child: Text('+ Create',
+                  style: GoogleFonts.inter(color: ZikrColors.emerald)),
+            ),
+            const SizedBox(width: 16),
+            TextButton(
+              onPressed: onJoinCircle,
+              child: Text('Join',
+                  style: GoogleFonts.inter(color: ZikrColors.inkMuted)),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
 
-class _CircleDemo {
-  final String name;
-  final int sharedStreak;
-  final List<_MemberDemo> members;
-  _CircleDemo(this.name, this.sharedStreak, this.members);
-}
-
-class _MemberDemo {
-  final String name;
-  final bool activeToday;
-  _MemberDemo(this.name, this.activeToday);
-}
-
 class _CircleCard extends StatelessWidget {
-  final _CircleDemo circle;
+  final Circle circle;
 
   const _CircleCard({required this.circle});
 
   @override
   Widget build(BuildContext context) {
-    final active = circle.members.where((m) => m.activeToday).length;
-    final total = circle.members.length;
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -313,7 +463,6 @@ class _CircleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
             children: [
               Text(
@@ -325,10 +474,10 @@ class _CircleCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              // Shared streak badge
               if (circle.sharedStreak > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: ZikrColors.emeraldSoft,
                     borderRadius: BorderRadius.circular(12),
@@ -336,7 +485,8 @@ class _CircleCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('🔥', style: TextStyle(fontSize: 12)),
+                      const Text('\u{1F525}',
+                          style: TextStyle(fontSize: 12)),
                       const SizedBox(width: 4),
                       Text(
                         '${circle.sharedStreak}d together',
@@ -351,34 +501,29 @@ class _CircleCard extends StatelessWidget {
                 ),
             ],
           ),
-
           const SizedBox(height: 6),
-
-          // Presence summary
           Text(
-            '$active of $total remembered today',
+            circle.presenceSummary,
             style: GoogleFonts.inter(
               fontSize: 13,
               color: ZikrColors.inkMuted,
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // Members
           for (final member in circle.members) ...[
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
-                  // Avatar
                   CircleAvatar(
                     radius: 16,
                     backgroundColor: member.activeToday
                         ? ZikrColors.emeraldSoft
                         : ZikrColors.marble,
                     child: Text(
-                      member.name[0],
+                      member.displayName.isNotEmpty
+                          ? member.displayName[0]
+                          : '?',
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -389,27 +534,24 @@ class _CircleCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Name
                   Text(
-                    member.name,
+                    member.displayName,
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       color: ZikrColors.ink,
                     ),
                   ),
                   const Spacer(),
-                  // Status
                   if (member.activeToday)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4,
-                      ),
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: ZikrColors.emeraldSoft,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '✓ today',
+                        '\u2713 today',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: ZikrColors.emerald,
@@ -419,7 +561,7 @@ class _CircleCard extends StatelessWidget {
                     )
                   else
                     Text(
-                      'yesterday',
+                      member.lastActiveLabel ?? '',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: ZikrColors.inkMuted,
