@@ -3,6 +3,25 @@
 *.keystore
 android/key.properties
 
+# Web build output (deployed via GitHub Actions)
+/assets/AssetManifest*
+/assets/FontManifest*
+/assets/NOTICES
+/assets/fonts/MaterialIcons*
+/assets/packages/
+/assets/shaders/
+/canvaskit/
+/favicon.png
+/flutter.js
+/flutter_bootstrap.js
+/flutter_service_worker.js
+/icons/
+/index.html
+/main.dart.js
+/manifest.json
+/splash/
+/version.json
+
 # Miscellaneous
 *.class
 *.log
