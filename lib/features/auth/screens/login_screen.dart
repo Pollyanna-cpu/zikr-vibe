@@ -28,9 +28,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  // TODO: Re-enable when OAuth providers are configured in Supabase
-  // Future<void> _signInWithApple() async { ... }
-  // Future<void> _signInWithGoogle() async { ... }
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authServiceProvider).signInWithGoogle();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google sign in failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _submitEmail() async {
     final email = _emailController.text.trim();
@@ -112,11 +123,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Apple Sign In (coming soon — hidden until OAuth configured)
-                // TODO: unhide when Apple OAuth is configured in Supabase
+                const SizedBox(height: 12),
 
-                // Google Sign In (coming soon — hidden until OAuth configured)
-                // TODO: unhide when Google OAuth is configured in Supabase
+                // Google Sign In
+                _SocialButton(
+                  onPressed: _isLoading ? null : _signInWithGoogle,
+                  icon: Icons.g_mobiledata_rounded,
+                  label: 'Continue with Google',
+                  backgroundColor: Colors.white,
+                  foregroundColor: ZikrColors.ink,
+                ),
+
+                // TODO: Apple Sign In — add when Apple Developer account is ready
 
                 // Skip — use without account
                 TextButton(
