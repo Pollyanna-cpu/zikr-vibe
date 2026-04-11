@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/theme.dart';
+import '../../../core/skin.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../streak/providers/streak_provider.dart';
 import '../../groups/providers/groups_provider.dart';
+import 'skin_selector_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -11,6 +12,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final skin = ref.watch(skinProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -21,16 +23,16 @@ class ProfileScreen extends ConsumerWidget {
             // Avatar
             CircleAvatar(
               radius: 48,
-              backgroundColor: ZikrColors.emerald.withValues(alpha: 0.1),
+              backgroundColor: skin.primary.withValues(alpha: 0.1),
               child: Text(
                 (user?.userMetadata?['display_name'] as String?)
                         ?.substring(0, 1)
                         .toUpperCase() ??
                     '?',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w600,
-                  color: ZikrColors.emerald,
+                  color: skin.primary,
                 ),
               ),
             ),
@@ -63,6 +65,7 @@ class ProfileScreen extends ConsumerWidget {
                       label: 'Total Dhikr',
                       value: '${streak.lifetimeTotal}',
                       icon: Icons.touch_app_rounded,
+                      skin: skin,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -71,6 +74,7 @@ class ProfileScreen extends ConsumerWidget {
                       label: 'Streak',
                       value: '${streak.currentStreak}d',
                       icon: Icons.local_fire_department_rounded,
+                      skin: skin,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -79,6 +83,7 @@ class ProfileScreen extends ConsumerWidget {
                       label: 'Groups',
                       value: '$groupCount',
                       icon: Icons.group_rounded,
+                      skin: skin,
                     ),
                   ),
                 ],
@@ -91,21 +96,32 @@ class ProfileScreen extends ConsumerWidget {
             _SettingsTile(
               icon: Icons.calculate_rounded,
               label: 'Prayer Calculation Method',
+              skin: skin,
               onTap: () {},
             ),
             _SettingsTile(
               icon: Icons.notifications_rounded,
               label: 'Notification Settings',
+              skin: skin,
               onTap: () {},
             ),
             _SettingsTile(
-              icon: Icons.dark_mode_rounded,
+              icon: Icons.palette_rounded,
               label: 'Appearance',
-              onTap: () {},
+              subtitle: skin.name,
+              skin: skin,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const SkinSelectorScreen()),
+                );
+              },
             ),
             _SettingsTile(
               icon: Icons.info_outline_rounded,
               label: 'About Zikr Vibe',
+              skin: skin,
               onTap: () {},
             ),
 
@@ -114,9 +130,9 @@ class ProfileScreen extends ConsumerWidget {
             // Sign out
             TextButton(
               onPressed: () => ref.read(authServiceProvider).signOut(),
-              child: const Text(
+              child: Text(
                 'Sign Out',
-                style: TextStyle(color: ZikrColors.error),
+                style: TextStyle(color: skin.error),
               ),
             ),
           ],
@@ -130,11 +146,13 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
+  final ZikrSkin skin;
 
   const _StatCard({
     required this.label,
     required this.value,
     required this.icon,
+    required this.skin,
   });
 
   @override
@@ -144,23 +162,20 @@ class _StatCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(icon, color: ZikrColors.emerald, size: 24),
+            Icon(icon, color: skin.primary, size: 24),
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: ZikrColors.ink,
+                color: skin.ink,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: ZikrColors.inkMuted,
-              ),
+              style: TextStyle(fontSize: 12, color: skin.inkMuted),
             ),
           ],
         ),
@@ -172,20 +187,27 @@ class _StatCard extends StatelessWidget {
 class _SettingsTile extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String? subtitle;
+  final ZikrSkin skin;
   final VoidCallback onTap;
 
   const _SettingsTile({
     required this.icon,
     required this.label,
+    this.subtitle,
+    required this.skin,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: ZikrColors.inkMuted),
+      leading: Icon(icon, color: skin.inkMuted),
       title: Text(label),
-      trailing: const Icon(Icons.chevron_right_rounded, color: ZikrColors.inkMuted),
+      subtitle: subtitle != null
+          ? Text(subtitle!, style: TextStyle(color: skin.primary, fontSize: 12))
+          : null,
+      trailing: Icon(Icons.chevron_right_rounded, color: skin.inkMuted),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
     );

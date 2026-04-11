@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import '../../../core/theme.dart';
+import '../../../core/skin.dart';
 import '../providers/dhikr_provider.dart';
 import '../models/counter_group.dart';
 import '../../streak/providers/streak_provider.dart';
@@ -89,11 +89,12 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
   @override
   Widget build(BuildContext context) {
     final dhikr = ref.watch(dhikrProvider);
+    final skin = ref.watch(skinProvider);
     final group = dhikr.active;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: ZikrColors.marble,
+      backgroundColor: skin.surface,
       body: GestureDetector(
         onTap: _onTap,
         onLongPress: () => _showResetSheet(context, ref, group.name),
@@ -112,7 +113,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
         child: Stack(
           children: [
             // Subtle geometric background pattern
-            Positioned.fill(child: _GeometricBackground()),
+            Positioned.fill(child: _GeometricBackground(skin: skin)),
 
             // Ripple effect
             AnimatedBuilder(
@@ -125,7 +126,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                     height: 300 * _rippleSize.value,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: ZikrColors.emerald
+                      color: skin.tapGlow
                           .withValues(alpha: _rippleOpacity.value),
                     ),
                   ),
@@ -172,7 +173,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
-                                color: ZikrColors.inkSoft,
+                                color: skin.inkSoft,
                                 letterSpacing: 1.5,
                               ).copyWith(
                                 letterSpacing: 1.5,
@@ -205,8 +206,8 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                                 fontSize: 120,
                                 fontWeight: FontWeight.w700,
                                 color: ref.read(dhikrProvider.notifier).isAtMilestone
-                                    ? ZikrColors.gold
-                                    : ZikrColors.ink,
+                                    ? skin.accent
+                                    : skin.ink,
                                 height: 1,
                                 letterSpacing: -4,
                               ),
@@ -217,7 +218,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
 
                           // Subtle progress dots (visual rhythm)
                           if (!group.isAtMax)
-                            _ProgressDots(count: group.count),
+                            _ProgressDots(count: group.count, skin: skin),
                         ],
                       ),
                     ),
@@ -245,7 +246,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                                   horizontal: 14, vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: ZikrColors.emeraldSoft,
+                                  color: skin.primarySoft,
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Row(
@@ -257,7 +258,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                                       '${streak.currentStreak} day streak',
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
-                                        color: ZikrColors.emerald,
+                                        color: skin.primary,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -273,7 +274,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                               '${dhikr.dailyTotal} today',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
-                                color: ZikrColors.inkMuted,
+                                color: skin.inkMuted,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -282,7 +283,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                             group.isAtMax ? 'Alhamdulillah' : 'tap · swipe · hold',
                             style: GoogleFonts.inter(
                               fontSize: 11,
-                              color: ZikrColors.inkMuted.withValues(alpha: 0.5),
+                              color: skin.inkMuted.withValues(alpha: 0.5),
                               letterSpacing: 2,
                             ),
                           ),
@@ -300,9 +301,10 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
   }
 
   void _showResetSheet(BuildContext context, WidgetRef ref, String name) {
+    final skin = ref.read(skinProvider);
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: skin.surfaceCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -316,7 +318,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: ZikrColors.divider,
+                  color: skin.divider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -326,7 +328,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: ZikrColors.ink,
+                  color: skin.ink,
                 ),
               ),
               const SizedBox(height: 8),
@@ -334,7 +336,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                 'Counter will return to 0',
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  color: ZikrColors.inkSoft,
+                  color: skin.inkSoft,
                 ),
               ),
               const SizedBox(height: 24),
@@ -347,13 +349,13 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(color: ZikrColors.divider),
+                          side: BorderSide(color: skin.divider),
                         ),
                       ),
                       child: Text(
                         'Cancel',
                         style: GoogleFonts.inter(
-                          color: ZikrColors.inkSoft,
+                          color: skin.inkSoft,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -368,7 +370,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                       },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: ZikrColors.emerald,
+                        backgroundColor: skin.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -392,11 +394,12 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
   }
 
   void _showAddGroupSheet(BuildContext context, WidgetRef ref) {
+    final skin = ref.read(skinProvider);
     final controller = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: skin.surfaceCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -414,7 +417,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: ZikrColors.divider,
+                  color: skin.divider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -425,7 +428,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: ZikrColors.ink,
+                color: skin.ink,
               ),
             ),
             const SizedBox(height: 16),
@@ -436,9 +439,9 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
               style: GoogleFonts.inter(fontSize: 16),
               decoration: InputDecoration(
                 hintText: 'La ilaha illallah',
-                hintStyle: GoogleFonts.inter(color: ZikrColors.inkMuted),
+                hintStyle: GoogleFonts.inter(color: skin.inkMuted),
                 filled: true,
-                fillColor: ZikrColors.marble,
+                fillColor: skin.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -461,7 +464,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                 },
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: ZikrColors.emerald,
+                  backgroundColor: skin.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -484,7 +487,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
 }
 
 /// Minimal group selector pills
-class _GroupPills extends StatelessWidget {
+class _GroupPills extends ConsumerWidget {
   final List<CounterGroup> groups;
   final int activeIndex;
   final ValueChanged<int> onTap;
@@ -498,7 +501,8 @@ class _GroupPills extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
     return SizedBox(
       height: 36,
       child: ListView.separated(
@@ -515,16 +519,9 @@ class _GroupPills extends StatelessWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: ZikrColors.divider,
-                    width: 1,
-                  ),
+                  border: Border.all(color: skin.divider, width: 1),
                 ),
-                child: const Icon(
-                  Icons.add,
-                  size: 16,
-                  color: ZikrColors.inkMuted,
-                ),
+                child: Icon(Icons.add, size: 16, color: skin.inkMuted),
               ),
             );
           }
@@ -537,10 +534,10 @@ class _GroupPills extends StatelessWidget {
               curve: Curves.easeInOut,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: isActive ? ZikrColors.emerald : Colors.transparent,
+                color: isActive ? skin.primary : Colors.transparent,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: isActive ? ZikrColors.emerald : ZikrColors.divider,
+                  color: isActive ? skin.primary : skin.divider,
                   width: 1,
                 ),
               ),
@@ -550,7 +547,7 @@ class _GroupPills extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                    color: isActive ? Colors.white : ZikrColors.inkSoft,
+                    color: isActive ? Colors.white : skin.inkSoft,
                   ),
                 ),
               ),
@@ -565,12 +562,12 @@ class _GroupPills extends StatelessWidget {
 /// Subtle progress dots — visual rhythm for counting
 class _ProgressDots extends StatelessWidget {
   final int count;
+  final ZikrSkin skin;
 
-  const _ProgressDots({required this.count});
+  const _ProgressDots({required this.count, required this.skin});
 
   @override
   Widget build(BuildContext context) {
-    // Show dots in groups of 33 (one tasbih cycle)
     final dotsInCycle = count % 33;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -583,8 +580,8 @@ class _ProgressDots extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: i < dotsInCycle
-                ? ZikrColors.emerald.withValues(alpha: 0.6)
-                : ZikrColors.divider,
+                ? skin.primary.withValues(alpha: 0.6)
+                : skin.divider,
           ),
         ),
       ),
@@ -592,25 +589,37 @@ class _ProgressDots extends StatelessWidget {
   }
 }
 
-/// Subtle Islamic geometric background
+/// Subtle Islamic geometric background — colors from current skin
 class _GeometricBackground extends StatelessWidget {
+  final ZikrSkin skin;
+  const _GeometricBackground({required this.skin});
+
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _IslamicPatternPainter(),
-    );
+    return CustomPaint(painter: _IslamicPatternPainter(skin));
   }
 }
 
 class _IslamicPatternPainter extends CustomPainter {
+  final ZikrSkin skin;
+  _IslamicPatternPainter(this.skin);
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = ZikrColors.emerald.withValues(alpha: 0.018)
+      ..color = skin.primary.withValues(alpha: skin.patternOpacity)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
 
-    // Subtle octagonal star pattern
+    if (skin.patternStyle == 'arabesque') {
+      _paintArabesque(canvas, size, paint);
+    } else {
+      _paintOctagram(canvas, size, paint);
+    }
+  }
+
+  // --- Octagram: 8-pointed star (mosque ceilings) ---
+  void _paintOctagram(Canvas canvas, Size size, Paint paint) {
     const spacing = 80.0;
     for (double x = -spacing; x < size.width + spacing; x += spacing) {
       for (double y = -spacing; y < size.height + spacing; y += spacing) {
@@ -619,7 +628,8 @@ class _IslamicPatternPainter extends CustomPainter {
     }
   }
 
-  void _drawOctagramStar(Canvas canvas, Offset center, double radius, Paint paint) {
+  void _drawOctagramStar(
+      Canvas canvas, Offset center, double radius, Paint paint) {
     final path = Path();
     for (int i = 0; i < 8; i++) {
       final angle = (i * pi / 4) - pi / 2;
@@ -640,6 +650,54 @@ class _IslamicPatternPainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
+  // --- Arabesque: interlocking petal curves (Ottoman tiles, rose gardens) ---
+  void _paintArabesque(Canvas canvas, Size size, Paint paint) {
+    // Second layer: accent-colored petals, lower opacity
+    final accentPaint = Paint()
+      ..color = skin.accent.withValues(alpha: skin.patternOpacity * 0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.4;
+
+    const spacing = 72.0;
+    for (double x = -spacing; x < size.width + spacing; x += spacing) {
+      for (double y = -spacing; y < size.height + spacing; y += spacing) {
+        // Offset every other row for a woven feel
+        final ox = (y ~/ spacing).isOdd ? x + spacing * 0.5 : x;
+        _drawRosette(canvas, Offset(ox, y), spacing * 0.32, paint);
+        _drawRosette(canvas, Offset(ox, y), spacing * 0.18, accentPaint);
+      }
+    }
+  }
+
+  /// A 6-petal rosette using quadratic Bézier curves.
+  void _drawRosette(
+      Canvas canvas, Offset center, double radius, Paint paint) {
+    final path = Path();
+    const petals = 6;
+    for (int i = 0; i < petals; i++) {
+      final angle = (i * 2 * pi / petals) - pi / 2;
+      final nextAngle = ((i + 1) * 2 * pi / petals) - pi / 2;
+
+      final tipX = center.dx + radius * cos(angle);
+      final tipY = center.dy + radius * sin(angle);
+      final nextTipX = center.dx + radius * cos(nextAngle);
+      final nextTipY = center.dy + radius * sin(nextAngle);
+
+      // Control point pushes outward for a rounded petal
+      final midAngle = (angle + nextAngle) / 2;
+      final cpX = center.dx + radius * 0.55 * cos(midAngle);
+      final cpY = center.dy + radius * 0.55 * sin(midAngle);
+
+      if (i == 0) {
+        path.moveTo(tipX, tipY);
+      }
+      path.quadraticBezierTo(cpX, cpY, nextTipX, nextTipY);
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _IslamicPatternPainter old) =>
+      old.skin.id != skin.id;
 }
