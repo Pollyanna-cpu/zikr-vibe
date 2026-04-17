@@ -109,37 +109,37 @@ class ZikrSkins {
     patternStyle: 'octagram',
   );
 
-  /// Rosewater — dusty pink + warm gold arabesque. For her.
-  /// Inspired by Ottoman rose gardens, Turkish mosque tiles in pink
-  /// tones, and the rosewater served after prayer.
+  /// Rosewater — luminous blush pink + champagne gold. For her.
+  /// Inspired by Kris Jenner's golden glow, Rhode Skin aesthetics,
+  /// silk-on-light warmth. Not berry, not bubblegum — champagne blush.
   static const rosewater = ZikrSkin(
     id: 'rosewater',
     name: 'Rosewater',
     nameAr: 'ماء الورد',
-    description: 'Dusty rose & gold. Arabesque patterns.',
+    description: 'Dusty rose & warm gold. Luminous.',
     isFree: true, // free for now — monetize later
     priceUsd: 0,
-    // Dusty pink — not bubblegum, think dried Damascus roses
-    primary: Color(0xFFA4566E),
-    primaryLight: Color(0xFFC47A90),
-    primarySoft: Color(0xFFFCEDF2),
-    // Warm gold — like the gold leaf on Quran covers
-    accent: Color(0xFFC9A84C),
-    accentLight: Color(0xFFDDC06A),
-    accentSoft: Color(0xFFFDF6E4),
-    // Surfaces — warm cream, not cold white
-    surface: Color(0xFFFDF8F6),
-    surfaceWarm: Color(0xFFF9F0EC),
-    surfaceCard: Color(0xFFFFFBF9),
-    // Text — warm charcoal, not pure black
-    ink: Color(0xFF2D1F24),
-    inkSoft: Color(0xFF6E525C),
-    inkMuted: Color(0xFFB0949D),
-    // Dividers — blush pink, barely visible
-    divider: Color(0xFFF2E2E7),
-    tapGlow: Color(0xFFA4566E),
+    // Dusty rose — warm pink, less brown than nude, more luminous
+    primary: Color(0xFFDB9A9F),
+    primaryLight: Color(0xFFE8B5B9),
+    primarySoft: Color(0xFFFCEFF0),
+    // Champagne gold — warm, silky, light-through-curtain gold
+    accent: Color(0xFFC5A76D),
+    accentLight: Color(0xFFD9C08C),
+    accentSoft: Color(0xFFFDF5E8),
+    // Surfaces — warm champagne cream
+    surface: Color(0xFFFAF2EE),
+    surfaceWarm: Color(0xFFF4E6DF),
+    surfaceCard: Color(0xFFFFF8F5),
+    // Text — warm brown, not cold gray
+    ink: Color(0xFF2C1F1A),
+    inkSoft: Color(0xFF7A6459),
+    inkMuted: Color(0xFFB8A198),
+    // Dividers — champagne whisper
+    divider: Color(0xFFF2E4DD),
+    tapGlow: Color(0xFFE8B5B9),
     error: Color(0xFFCC3D3D),
-    patternOpacity: 0.030,
+    patternOpacity: 0.025,
     patternStyle: 'arabesque',
     // Dark mode — deep wine + rose gold
     darkSurface: Color(0xFF1A0E12),
@@ -148,7 +148,193 @@ class ZikrSkins {
     darkNavBg: Color(0xFF221418),
   );
 
-  static const List<ZikrSkin> all = [rosewater, mosque];
+  /// Pink Sand — bright warm pink. Dawn over Wadi Rum dunes.
+  static const pinkSand = ZikrSkin(
+    id: 'pink_sand',
+    name: 'Pink Sand',
+    nameAr: 'رمال وردية',
+    description: 'Bright rose. Dawn over Wadi Rum.',
+    isFree: true, // TODO: set false after preview
+    priceUsd: 1.99,
+    primary: Color(0xFFEEB7C3),
+    primaryLight: Color(0xFFF4CDD6),
+    primarySoft: Color(0xFFFDF0F3),
+    accent: Color(0xFFC5A76D),
+    accentLight: Color(0xFFD9C08C),
+    accentSoft: Color(0xFFFDF5E8),
+    surface: Color(0xFFFFF5F7),
+    surfaceWarm: Color(0xFFFBECEF),
+    surfaceCard: Color(0xFFFFFAFB),
+    ink: Color(0xFF2C1F1A),
+    inkSoft: Color(0xFF7A6459),
+    inkMuted: Color(0xFFB8A198),
+    divider: Color(0xFFF5E4E8),
+    tapGlow: Color(0xFFF4CDD6),
+    error: Color(0xFFCC3D3D),
+    patternOpacity: 0.02,
+    patternStyle: 'arabesque',
+    darkSurface: Color(0xFF1A0E12),
+    darkOnSurface: Color(0xFFF5D8E0),
+    darkPrimary: Color(0xFFF0B8C8),
+    darkNavBg: Color(0xFF221418),
+  );
+
+  /// Misty Rose — lavender pink. Cream fog over rose gardens.
+  static const mistyRose = ZikrSkin(
+    id: 'misty_rose',
+    name: '奶雾蔷薇',
+    nameAr: 'ضباب الورد',
+    description: 'Lavender pink. Soft and dreamy.',
+    isFree: true, // TODO: set false after preview
+    priceUsd: 1.99,
+    primary: Color(0xFFF8CDED),
+    primaryLight: Color(0xFFFBDDF3),
+    primarySoft: Color(0xFFFEF4FC),
+    accent: Color(0xFFC5A76D),
+    accentLight: Color(0xFFD9C08C),
+    accentSoft: Color(0xFFFDF5E8),
+    surface: Color(0xFFFFF6FD),
+    surfaceWarm: Color(0xFFFBEEF8),
+    surfaceCard: Color(0xFFFFFAFE),
+    ink: Color(0xFF2A1A28),
+    inkSoft: Color(0xFF6E5A6A),
+    inkMuted: Color(0xFFAA98A6),
+    divider: Color(0xFFF5E6F2),
+    tapGlow: Color(0xFFFBDDF3),
+    error: Color(0xFFCC3D3D),
+    patternOpacity: 0.02,
+    patternStyle: 'arabesque',
+    darkSurface: Color(0xFF180E18),
+    darkOnSurface: Color(0xFFF5D8F0),
+    darkPrimary: Color(0xFFF8CDED),
+    darkNavBg: Color(0xFF201420),
+  );
+
+  /// Mint Fog — fresh mint green. Morning dew on leaves.
+  static const mintFog = ZikrSkin(
+    id: 'mint_fog',
+    name: '清雾薄荷',
+    nameAr: 'نعناع الضباب',
+    description: 'Fresh mint. Cool and calm.',
+    isFree: true, // TODO: set false after preview
+    priceUsd: 1.99,
+    primary: Color(0xFFC6F0E0),
+    primaryLight: Color(0xFFD8F5EA),
+    primarySoft: Color(0xFFEFFBF5),
+    accent: Color(0xFF8DB5A0),
+    accentLight: Color(0xFFA8CCBA),
+    accentSoft: Color(0xFFE8F5EF),
+    surface: Color(0xFFF5FCFA),
+    surfaceWarm: Color(0xFFEDF8F3),
+    surfaceCard: Color(0xFFFAFEFC),
+    ink: Color(0xFF1A2820),
+    inkSoft: Color(0xFF5A6E62),
+    inkMuted: Color(0xFF98AEA2),
+    divider: Color(0xFFE2F2EA),
+    tapGlow: Color(0xFFD8F5EA),
+    error: Color(0xFFCC3D3D),
+    patternOpacity: 0.02,
+    patternStyle: 'octagram',
+    darkSurface: Color(0xFF0E1812),
+    darkOnSurface: Color(0xFFD8F0E5),
+    darkPrimary: Color(0xFFC6F0E0),
+    darkNavBg: Color(0xFF142018),
+  );
+
+  /// Haze Lilac — soft purple. Twilight clouds.
+  static const hazeLilac = ZikrSkin(
+    id: 'haze_lilac',
+    name: '雾霞柔紫',
+    nameAr: 'ضباب أرجواني',
+    description: 'Soft lilac. Twilight sky.',
+    isFree: true, // TODO: set false after preview
+    priceUsd: 1.99,
+    primary: Color(0xFFD6CEF8),
+    primaryLight: Color(0xFFE2DCFB),
+    primarySoft: Color(0xFFF3F1FE),
+    accent: Color(0xFFA098C0),
+    accentLight: Color(0xFFB8B0D4),
+    accentSoft: Color(0xFFF0EEF8),
+    surface: Color(0xFFF8F6FF),
+    surfaceWarm: Color(0xFFF2F0FA),
+    surfaceCard: Color(0xFFFCFBFF),
+    ink: Color(0xFF1E1A2C),
+    inkSoft: Color(0xFF5E5A6E),
+    inkMuted: Color(0xFF9E98AE),
+    divider: Color(0xFFEAE6F5),
+    tapGlow: Color(0xFFE2DCFB),
+    error: Color(0xFFCC3D3D),
+    patternOpacity: 0.02,
+    patternStyle: 'arabesque',
+    darkSurface: Color(0xFF12101A),
+    darkOnSurface: Color(0xFFE0D8F5),
+    darkPrimary: Color(0xFFD6CEF8),
+    darkNavBg: Color(0xFF1A1822),
+  );
+
+  /// Pearl Mist — soft cream pink. Morning fog over Gulf waters.
+  static const pearlMist = ZikrSkin(
+    id: 'pearl_mist',
+    name: 'Pearl Mist',
+    nameAr: 'ضباب اللؤلؤ',
+    description: 'Soft cream pink. Gulf morning mist.',
+    isFree: true, // TODO: set false after preview
+    priceUsd: 1.99,
+    primary: Color(0xFFE7C9CF),
+    primaryLight: Color(0xFFF0DAE0),
+    primarySoft: Color(0xFFFCF4F6),
+    accent: Color(0xFFC5A76D),
+    accentLight: Color(0xFFD9C08C),
+    accentSoft: Color(0xFFFDF5E8),
+    surface: Color(0xFFFFF8F9),
+    surfaceWarm: Color(0xFFF9F0F2),
+    surfaceCard: Color(0xFFFFFCFD),
+    ink: Color(0xFF2C1F1A),
+    inkSoft: Color(0xFF7A6459),
+    inkMuted: Color(0xFFB8A198),
+    divider: Color(0xFFF5EAED),
+    tapGlow: Color(0xFFF0DAE0),
+    error: Color(0xFFCC3D3D),
+    patternOpacity: 0.018,
+    patternStyle: 'arabesque',
+    darkSurface: Color(0xFF1A0E12),
+    darkOnSurface: Color(0xFFF5E0E5),
+    darkPrimary: Color(0xFFEBD0D8),
+    darkNavBg: Color(0xFF221418),
+  );
+
+  /// Ruby Petals — deep berry pink. Bold and confident.
+  static const rubyPetals = ZikrSkin(
+    id: 'ruby_petals',
+    name: 'Ruby Petals',
+    nameAr: 'بتلات الياقوت',
+    description: 'Deep berry. Bold and warm.',
+    isFree: true, // TODO: set false after preview
+    priceUsd: 1.99,
+    primary: Color(0xFFA55166),
+    primaryLight: Color(0xFFBE7585),
+    primarySoft: Color(0xFFF2E0E5),
+    accent: Color(0xFFC5A76D),
+    accentLight: Color(0xFFD9C08C),
+    accentSoft: Color(0xFFFDF5E8),
+    surface: Color(0xFFFAF2F4),
+    surfaceWarm: Color(0xFFF4E4E8),
+    surfaceCard: Color(0xFFFFF8F9),
+    ink: Color(0xFF2C1A20),
+    inkSoft: Color(0xFF6E5A60),
+    inkMuted: Color(0xFFAA98A0),
+    divider: Color(0xFFF0E2E6),
+    tapGlow: Color(0xFFBE7585),
+    error: Color(0xFFCC3D3D),
+    patternOpacity: 0.03,
+    patternStyle: 'arabesque',
+    darkSurface: Color(0xFF1A0E12),
+    darkOnSurface: Color(0xFFF0D0D8),
+    darkPrimary: Color(0xFFBE7585),
+    darkNavBg: Color(0xFF221418),
+  );
+
+  static const List<ZikrSkin> all = [rosewater, mosque, pinkSand, pearlMist, mistyRose, mintFog, hazeLilac, rubyPetals];
 
   static ZikrSkin byId(String id) =>
       all.firstWhere((s) => s.id == id, orElse: () => rosewater);

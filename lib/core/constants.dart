@@ -1,8 +1,8 @@
 class AppConstants {
   // Supabase — fill after creating project
-  static const String supabaseUrl = 'https://REDACTED-OLD-SUPABASE.supabase.co';
+  static const String supabaseUrl = 'https://ocxnevqgjiyhwdfpskfc.supabase.co';
   static const String supabaseAnonKey =
-      'REDACTED-JWT';
+      'sb_publishable_59VVJzQz3J1hCHnaP1srVg_Km4Is8Lp';
 
   // Default dhikr types
   static const List<DhikrType> defaultDhikrTypes = [

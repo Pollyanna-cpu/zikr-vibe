@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants.dart';
-import '../../../core/theme.dart';
+import '../../../core/skin.dart';
 
-class DhikrTypeSelector extends StatelessWidget {
+class DhikrTypeSelector extends ConsumerWidget {
   final List<DhikrType> types;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
@@ -15,7 +16,9 @@ class DhikrTypeSelector extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return SizedBox(
       height: 44,
       child: ListView.separated(
@@ -33,10 +36,10 @@ class DhikrTypeSelector extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? ZikrColors.emerald : Colors.white,
+                color: isSelected ? skin.primary : skin.surfaceCard,
                 borderRadius: BorderRadius.circular(22),
                 border: Border.all(
-                  color: isSelected ? ZikrColors.emerald : ZikrColors.divider,
+                  color: isSelected ? skin.primary : skin.divider,
                 ),
               ),
               child: Center(
@@ -45,7 +48,7 @@ class DhikrTypeSelector extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white : ZikrColors.ink,
+                    color: isSelected ? Colors.white : skin.ink,
                   ),
                 ),
               ),

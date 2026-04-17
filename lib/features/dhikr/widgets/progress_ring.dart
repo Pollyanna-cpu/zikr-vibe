@@ -1,8 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../../core/theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/skin.dart';
 
-class ProgressRing extends StatelessWidget {
+class ProgressRing extends ConsumerWidget {
   final double progress;
   final bool targetReached;
   final Widget child;
@@ -15,7 +16,9 @@ class ProgressRing extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return SizedBox(
       width: 220,
       height: 220,
@@ -28,6 +31,8 @@ class ProgressRing extends StatelessWidget {
             painter: _RingPainter(
               progress: progress,
               targetReached: targetReached,
+              trackColor: skin.divider,
+              progressColor: targetReached ? skin.accent : skin.primary,
             ),
           ),
           // Counter in center
@@ -41,8 +46,15 @@ class ProgressRing extends StatelessWidget {
 class _RingPainter extends CustomPainter {
   final double progress;
   final bool targetReached;
+  final Color trackColor;
+  final Color progressColor;
 
-  _RingPainter({required this.progress, required this.targetReached});
+  _RingPainter({
+    required this.progress,
+    required this.targetReached,
+    required this.trackColor,
+    required this.progressColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -52,7 +64,7 @@ class _RingPainter extends CustomPainter {
 
     // Background track
     final bgPaint = Paint()
-      ..color = ZikrColors.divider
+      ..color = trackColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -61,7 +73,7 @@ class _RingPainter extends CustomPainter {
 
     // Progress arc
     final progressPaint = Paint()
-      ..color = targetReached ? ZikrColors.gold : ZikrColors.emerald
+      ..color = progressColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -79,6 +91,8 @@ class _RingPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _RingPainter oldDelegate) {
     return oldDelegate.progress != progress ||
-        oldDelegate.targetReached != targetReached;
+        oldDelegate.targetReached != targetReached ||
+        oldDelegate.trackColor != trackColor ||
+        oldDelegate.progressColor != progressColor;
   }
 }
