@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../../core/theme.dart';
+import '../../../core/skin.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../providers/groups_provider.dart';
 import '../models/circle_model.dart';
@@ -16,15 +16,16 @@ class GroupsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final circlesAsync = ref.watch(circlesProvider);
+    final skin = ref.watch(skinProvider);
 
     return Scaffold(
-      backgroundColor: ZikrColors.marble,
+      backgroundColor: skin.surface,
       appBar: AppBar(
         title: const Text('Dhikr Circles'),
         backgroundColor: Colors.transparent,
       ),
       body: user == null
-          ? _NotLoggedIn()
+          ? const _NotLoggedIn()
           : circlesAsync.when(
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
@@ -48,11 +49,12 @@ class GroupsScreen extends ConsumerWidget {
   }
 
   void _showCreateSheet(BuildContext context, WidgetRef ref) {
+    final skin = ref.read(skinProvider);
     final controller = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: skin.surfaceCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -69,7 +71,7 @@ class GroupsScreen extends ConsumerWidget {
               child: Container(
                 width: 36, height: 4,
                 decoration: BoxDecoration(
-                  color: ZikrColors.divider,
+                  color: skin.divider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -80,7 +82,7 @@ class GroupsScreen extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: ZikrColors.ink,
+                color: skin.ink,
               ),
             ),
             const SizedBox(height: 8),
@@ -89,7 +91,7 @@ class GroupsScreen extends ConsumerWidget {
               'Members see that you did dhikr today — nothing more.',
               style: GoogleFonts.inter(
                 fontSize: 13,
-                color: ZikrColors.inkSoft,
+                color: skin.inkSoft,
                 height: 1.5,
               ),
             ),
@@ -101,9 +103,9 @@ class GroupsScreen extends ConsumerWidget {
               style: GoogleFonts.inter(fontSize: 16),
               decoration: InputDecoration(
                 hintText: 'e.g. Family, Mosque friends',
-                hintStyle: GoogleFonts.inter(color: ZikrColors.inkMuted),
+                hintStyle: GoogleFonts.inter(color: skin.inkMuted),
                 filled: true,
-                fillColor: ZikrColors.marble,
+                fillColor: skin.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -150,7 +152,7 @@ class GroupsScreen extends ConsumerWidget {
                 },
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: ZikrColors.emerald,
+                  backgroundColor: skin.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -172,11 +174,12 @@ class GroupsScreen extends ConsumerWidget {
   }
 
   void _showJoinSheet(BuildContext context, WidgetRef ref) {
+    final skin = ref.read(skinProvider);
     final controller = TextEditingController();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: skin.surfaceCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -193,7 +196,7 @@ class GroupsScreen extends ConsumerWidget {
               child: Container(
                 width: 36, height: 4,
                 decoration: BoxDecoration(
-                  color: ZikrColors.divider,
+                  color: skin.divider,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -204,7 +207,7 @@ class GroupsScreen extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: ZikrColors.ink,
+                color: skin.ink,
               ),
             ),
             const SizedBox(height: 20),
@@ -216,9 +219,9 @@ class GroupsScreen extends ConsumerWidget {
               decoration: InputDecoration(
                 hintText: 'Paste invite code',
                 hintStyle: GoogleFonts.inter(
-                    color: ZikrColors.inkMuted, letterSpacing: 0),
+                    color: skin.inkMuted, letterSpacing: 0),
                 filled: true,
-                fillColor: ZikrColors.marble,
+                fillColor: skin.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -257,7 +260,7 @@ class GroupsScreen extends ConsumerWidget {
                 },
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: ZikrColors.emerald,
+                  backgroundColor: skin.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -279,19 +282,22 @@ class GroupsScreen extends ConsumerWidget {
   }
 }
 
-class _NotLoggedIn extends StatelessWidget {
+class _NotLoggedIn extends ConsumerWidget {
+  const _NotLoggedIn();
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
     return Center(
       child: Text(
         'Sign in to create or join circles',
-        style: GoogleFonts.inter(color: ZikrColors.inkMuted, fontSize: 15),
+        style: GoogleFonts.inter(color: skin.inkMuted, fontSize: 15),
       ),
     );
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   final VoidCallback onCreateCircle;
   final VoidCallback onJoinCircle;
 
@@ -301,7 +307,9 @@ class _EmptyState extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -311,14 +319,14 @@ class _EmptyState extends StatelessWidget {
             Container(
               width: 80,
               height: 80,
-              decoration: const BoxDecoration(
-                color: ZikrColors.emeraldSoft,
+              decoration: BoxDecoration(
+                color: skin.primarySoft,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.people_outline_rounded,
                 size: 36,
-                color: ZikrColors.emerald,
+                color: skin.primary,
               ),
             ),
             const SizedBox(height: 28),
@@ -327,7 +335,7 @@ class _EmptyState extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
-                color: ZikrColors.ink,
+                color: skin.ink,
               ),
             ),
             const SizedBox(height: 12),
@@ -337,7 +345,7 @@ class _EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 14,
-                color: ZikrColors.inkSoft,
+                color: skin.inkSoft,
                 height: 1.6,
               ),
             ),
@@ -347,20 +355,20 @@ class _EmptyState extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: ZikrColors.goldSoft,
+                color: skin.accentSoft,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.lock_outline_rounded,
-                      size: 14, color: ZikrColors.gold),
+                  Icon(Icons.lock_outline_rounded,
+                      size: 14, color: skin.accent),
                   const SizedBox(width: 8),
                   Text(
                     'Your count stays private. Always.',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: ZikrColors.gold,
+                      color: skin.accent,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -373,7 +381,7 @@ class _EmptyState extends StatelessWidget {
               style: TextButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                backgroundColor: ZikrColors.emerald,
+                backgroundColor: skin.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -393,7 +401,7 @@ class _EmptyState extends StatelessWidget {
               child: Text(
                 'Join with invite code',
                 style: GoogleFonts.inter(
-                  color: ZikrColors.inkMuted,
+                  color: skin.inkMuted,
                   fontSize: 14,
                 ),
               ),
@@ -405,7 +413,7 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _CirclesList extends StatelessWidget {
+class _CirclesList extends ConsumerWidget {
   final List<Circle> circles;
   final VoidCallback onCreateCircle;
   final VoidCallback onJoinCircle;
@@ -417,7 +425,9 @@ class _CirclesList extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
@@ -432,13 +442,13 @@ class _CirclesList extends StatelessWidget {
             TextButton(
               onPressed: onCreateCircle,
               child: Text('+ Create',
-                  style: GoogleFonts.inter(color: ZikrColors.emerald)),
+                  style: GoogleFonts.inter(color: skin.primary)),
             ),
             const SizedBox(width: 16),
             TextButton(
               onPressed: onJoinCircle,
               child: Text('Join',
-                  style: GoogleFonts.inter(color: ZikrColors.inkMuted)),
+                  style: GoogleFonts.inter(color: skin.inkMuted)),
             ),
           ],
         ),
@@ -447,19 +457,21 @@ class _CirclesList extends StatelessWidget {
   }
 }
 
-class _CircleCard extends StatelessWidget {
+class _CircleCard extends ConsumerWidget {
   final Circle circle;
 
   const _CircleCard({required this.circle});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: skin.surfaceCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ZikrColors.divider, width: 0.5),
+        border: Border.all(color: skin.divider, width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,7 +483,7 @@ class _CircleCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: ZikrColors.ink,
+                  color: skin.ink,
                 ),
               ),
               const Spacer(),
@@ -480,7 +492,7 @@ class _CircleCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: ZikrColors.emeraldSoft,
+                    color: skin.primarySoft,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -493,7 +505,7 @@ class _CircleCard extends StatelessWidget {
                         '${circle.sharedStreak}d together',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: ZikrColors.emerald,
+                          color: skin.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -509,7 +521,7 @@ class _CircleCard extends StatelessWidget {
                 circle.presenceSummary,
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  color: ZikrColors.inkMuted,
+                  color: skin.inkMuted,
                 ),
               ),
               const Spacer(),
@@ -518,12 +530,12 @@ class _CircleCard extends StatelessWidget {
                   Share.share(
                     'Join my dhikr circle "${circle.name}" on Zikr Vibe!\n\n'
                     'Invite code: ${circle.inviteCode}\n\n'
-                    'Download: https://zikrvibe.com',
+                    'Download: https://app.zikrvibe.com',
                     subject: 'Join ${circle.name} on Zikr Vibe',
                   );
                 },
-                child: const Icon(Icons.share_outlined,
-                    size: 18, color: ZikrColors.inkMuted),
+                child: Icon(Icons.share_outlined,
+                    size: 18, color: skin.inkMuted),
               ),
             ],
           ),
@@ -536,8 +548,8 @@ class _CircleCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 16,
                     backgroundColor: member.activeToday
-                        ? ZikrColors.emeraldSoft
-                        : ZikrColors.marble,
+                        ? skin.primarySoft
+                        : skin.surface,
                     child: Text(
                       member.displayName.isNotEmpty
                           ? member.displayName[0]
@@ -546,8 +558,8 @@ class _CircleCard extends StatelessWidget {
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: member.activeToday
-                            ? ZikrColors.emerald
-                            : ZikrColors.inkMuted,
+                            ? skin.primary
+                            : skin.inkMuted,
                       ),
                     ),
                   ),
@@ -556,7 +568,7 @@ class _CircleCard extends StatelessWidget {
                     member.displayName,
                     style: GoogleFonts.inter(
                       fontSize: 15,
-                      color: ZikrColors.ink,
+                      color: skin.ink,
                     ),
                   ),
                   const Spacer(),
@@ -565,14 +577,14 @@ class _CircleCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: ZikrColors.emeraldSoft,
+                        color: skin.primarySoft,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         '\u2713 today',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: ZikrColors.emerald,
+                          color: skin.primary,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -582,7 +594,7 @@ class _CircleCard extends StatelessWidget {
                       member.lastActiveLabel ?? '',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        color: ZikrColors.inkMuted,
+                        color: skin.inkMuted,
                       ),
                     ),
                 ],
