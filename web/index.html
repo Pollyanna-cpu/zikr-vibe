@@ -1,34 +1,145 @@
-<!DOCTYPE html><html><head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
+<!DOCTYPE html><html lang="en"><head>
+  <!-- Base href replaced by flutter build --base-href flag -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+
+  <!-- ═══ SEO & AEO ═══ -->
+  <title>Zikr Vibe — Muslim Dhikr Counter App | Count Your Dhikr. Nothing Else Watches.</title>
+  <meta name="description" content="Zikr Vibe is a private dhikr counter app for Muslims. Tap to count SubhanAllah, Alhamdulillah, Allahu Akbar. Track streaks, join companionship circles, pray together apart. No ads, no leaderboards, no riya. Free.">
+  <meta name="keywords" content="dhikr counter app, tasbih app, zikr counter, Muslim app, prayer counter, Islamic app, subhanallah counter, dhikr tracker, digital tasbih, private dhikr app">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <meta name="author" content="Soul Vibe Technology HK">
+  <link rel="canonical" href="https://app.zikrvibe.com">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Zikr Vibe — Count Your Dhikr. Nothing Else Watches.">
+  <meta property="og:description" content="A private dhikr counter app for Muslims. No ads, no leaderboards, no riya. Free to download.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://app.zikrvibe.com">
+  <meta property="og:site_name" content="Zikr Vibe">
+  <meta property="og:image" content="https://app.zikrvibe.com/icons/Icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Zikr Vibe — Dhikr Counter App for Muslims">
+  <meta name="twitter:description" content="Count your dhikr. Nothing else watches. Free, private, no ads.">
+  <meta name="twitter:image" content="https://app.zikrvibe.com/icons/Icon-512.png">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="zikr_vibe">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Zikr Vibe">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Theme -->
+  <meta name="theme-color" content="#DB9A9F">
+  <meta name="color-scheme" content="light dark">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png">
 
-  <title>zikr_vibe</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Google tag (gtag.js) — GA4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FDYCNB3ZMD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FDYCNB3ZMD');
+  </script>
+
+  <!-- JSON-LD Structured Data for AEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "MobileApplication",
+        "@id": "https://app.zikrvibe.com/#app",
+        "name": "Zikr Vibe",
+        "alternateName": "Zikr Vibe Dhikr Counter",
+        "applicationCategory": "LifestyleApplication",
+        "applicationSubCategory": "Religious",
+        "operatingSystem": "iOS, Android, Web",
+        "description": "A private dhikr counter app for Muslims. Tap to count SubhanAllah, Alhamdulillah, Allahu Akbar. Track daily streaks, join companionship circles, pray together apart. No ads, no leaderboards, no riya.",
+        "url": "https://app.zikrvibe.com",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "creator": {
+          "@type": "Organization",
+          "@id": "https://www.nbidea.ai/#organization",
+          "name": "Soul Vibe Technology HK",
+          "url": "https://www.nbidea.ai"
+        },
+        "featureList": [
+          "Tap-to-count dhikr tracker with haptic feedback",
+          "Daily streak tracking",
+          "Companionship circles — pray together apart",
+          "Binary presence check-in (no numbers shared)",
+          "No ads, no in-app purchases, no tracking",
+          "Works offline"
+        ],
+        "inLanguage": ["en", "ar"],
+        "isAccessibleForFree": true
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Zikr Vibe?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Zikr Vibe is a free dhikr counter app for Muslims. Tap the screen to count each dhikr — SubhanAllah, Alhamdulillah, Allahu Akbar. Track your daily streaks, join companionship circles with friends and family, and pray together even when apart. Private by design — no ads, no leaderboards, no riya."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Zikr Vibe free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Zikr Vibe is completely free to download and use. No ads, no in-app purchases, no premium tier. The app is funded by the Zikr Vibe smart prayer ring, which is a separate hardware product."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does Zikr Vibe track my dhikr count publicly?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Your dhikr count is private. Companionship circles use binary presence check-in — friends see that you prayed today, but not how many times. This design protects against riya (ostentation) and respects the private nature of worship in Islam."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does Zikr Vibe work offline?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Core dhikr counting works fully offline. Only companionship circle sync requires internet connection. You can track your dhikr anywhere — during Hajj, on a plane, in Makkah, or at home without wifi."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Who built Zikr Vibe?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Zikr Vibe is built by Soul Vibe Technology, an award-winning Hong Kong startup (EIA 2025 Startup Champion, EWC 2025 Global Top 1000). Zikr Vibe is part of the Nbidea product portfolio, alongside the Zikr Vibe smart prayer ring hardware at zikrvibe.com."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
   <style id="splash-screen-style">
     html {
       height: 100%
@@ -37,7 +148,7 @@
     body {
       margin: 0;
       min-height: 100%;
-      background-color: #0A4D38;
+      background-color: #FFFFFF;
           background-size: 100% 100%;
     }
 
