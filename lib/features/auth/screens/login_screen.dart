@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme.dart';
+import '../../../core/skin.dart';
 import '../../../core/router.dart';
 import '../providers/auth_provider.dart';
 
@@ -71,7 +71,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final skin = ref.watch(skinProvider);
+
     return Scaffold(
+      backgroundColor: skin.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -84,7 +87,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: ZikrColors.emerald,
+                  color: skin.primary,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Icon(
@@ -99,14 +102,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 'Zikr Vibe',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: ZikrColors.emerald,
+                  color: skin.primary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Count your dhikr. Nothing else watches.',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: skin.inkSoft,
+                ),
                 textAlign: TextAlign.center,
               ),
 
@@ -118,11 +123,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onPressed: () => setState(() => _showEmailForm = true),
                   icon: Icons.email_outlined,
                   label: 'Continue with Email',
-                  backgroundColor: ZikrColors.emerald,
+                  backgroundColor: skin.primary,
                   foregroundColor: Colors.white,
                 ),
-                const SizedBox(height: 12),
-
                 const SizedBox(height: 12),
 
                 // Google Sign In
@@ -131,10 +134,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   icon: Icons.g_mobiledata_rounded,
                   label: 'Continue with Google',
                   backgroundColor: Colors.white,
-                  foregroundColor: ZikrColors.ink,
+                  foregroundColor: skin.ink,
                 ),
 
                 // TODO: Apple Sign In — add when Apple Developer account is ready
+
+                const SizedBox(height: 12),
 
                 // Skip — use without account
                 TextButton(
@@ -142,10 +147,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     skipAuth(ref);
                     if (context.mounted) context.go('/dhikr');
                   },
-                  child: const Text(
+                  child: Text(
                     'Use without an account',
                     style: TextStyle(
-                      color: ZikrColors.inkMuted,
+                      color: skin.inkMuted,
                       fontSize: 14,
                     ),
                   ),
@@ -155,27 +160,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 if (_isSignUp)
                   TextField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Display Name',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: skin.primary),
+                      ),
                     ),
                     textCapitalization: TextCapitalization.words,
                   ),
                 if (_isSignUp) const SizedBox(height: 12),
                 TextField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: skin.primary),
+                    ),
                   ),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: skin.primary),
+                    ),
                   ),
                   obscureText: true,
                 ),
@@ -184,6 +198,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _submitEmail,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: skin.primary,
+                      foregroundColor: Colors.white,
+                    ),
                     child: _isLoading
                         ? const SizedBox(
                             width: 20,
@@ -203,11 +221,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     _isSignUp
                         ? 'Already have an account? Sign In'
                         : "Don't have an account? Sign Up",
+                    style: TextStyle(color: skin.primary),
                   ),
                 ),
                 TextButton(
                   onPressed: () => setState(() => _showEmailForm = false),
-                  child: const Text('Back'),
+                  child: Text('Back', style: TextStyle(color: skin.inkSoft)),
                 ),
               ],
 

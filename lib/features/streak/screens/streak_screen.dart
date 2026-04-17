@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme.dart';
+import '../../../core/skin.dart';
 import '../providers/streak_provider.dart';
 
 class StreakScreen extends ConsumerWidget {
@@ -10,10 +10,11 @@ class StreakScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final streak = ref.watch(streakProvider);
+    final skin = ref.watch(skinProvider);
     final now = DateTime.now();
 
     return Scaffold(
-      backgroundColor: ZikrColors.marble,
+      backgroundColor: skin.surface,
       appBar: AppBar(
         title: const Text('Your Journey'),
         backgroundColor: Colors.transparent,
@@ -33,26 +34,32 @@ class StreakScreen extends ConsumerWidget {
             // Stats row
             Row(
               children: [
-                Expanded(child: _StatTile(
-                  label: 'Current',
-                  value: '${streak.currentStreak}',
-                  unit: 'days',
-                  color: ZikrColors.emerald,
-                )),
+                Expanded(
+                  child: _StatTile(
+                    label: 'Current',
+                    value: '${streak.currentStreak}',
+                    unit: 'days',
+                    color: skin.primary,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _StatTile(
-                  label: 'Longest',
-                  value: '${streak.longestStreak}',
-                  unit: 'days',
-                  color: ZikrColors.gold,
-                )),
+                Expanded(
+                  child: _StatTile(
+                    label: 'Longest',
+                    value: '${streak.longestStreak}',
+                    unit: 'days',
+                    color: skin.accent,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _StatTile(
-                  label: 'Lifetime',
-                  value: _formatCount(streak.lifetimeTotal),
-                  unit: 'dhikr',
-                  color: ZikrColors.inkSoft,
-                )),
+                Expanded(
+                  child: _StatTile(
+                    label: 'Lifetime',
+                    value: _formatCount(streak.lifetimeTotal),
+                    unit: 'dhikr',
+                    color: skin.inkSoft,
+                  ),
+                ),
               ],
             ),
 
@@ -64,7 +71,7 @@ class StreakScreen extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: ZikrColors.ink,
+                color: skin.ink,
               ),
             ),
             const SizedBox(height: 16),
@@ -82,7 +89,7 @@ class StreakScreen extends ConsumerWidget {
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: ZikrColors.ink,
+                color: skin.ink,
               ),
             ),
             const SizedBox(height: 16),
@@ -115,28 +122,33 @@ class StreakScreen extends ConsumerWidget {
 }
 
 /// Big streak number with fire indicator
-class _StreakHeroCard extends StatelessWidget {
+class _StreakHeroCard extends ConsumerWidget {
   final StreakState streak;
 
   const _StreakHeroCard({required this.streak});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 32),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: skin.surfaceCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ZikrColors.divider, width: 0.5),
+        border: Border.all(color: skin.divider, width: 0.5),
       ),
       child: Column(
         children: [
           // Fire emoji for active streaks
           if (streak.currentStreak > 0) ...[
             Text(
-              streak.currentStreak >= 30 ? '🔥🔥🔥' :
-              streak.currentStreak >= 7 ? '🔥🔥' : '🔥',
+              streak.currentStreak >= 30
+                  ? '🔥🔥🔥'
+                  : streak.currentStreak >= 7
+                      ? '🔥🔥'
+                      : '🔥',
               style: const TextStyle(fontSize: 28),
             ),
             const SizedBox(height: 8),
@@ -146,7 +158,7 @@ class _StreakHeroCard extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 64,
               fontWeight: FontWeight.w700,
-              color: streak.currentStreak > 0 ? ZikrColors.emerald : ZikrColors.inkMuted,
+              color: streak.currentStreak > 0 ? skin.primary : skin.inkMuted,
               height: 1,
             ),
           ),
@@ -155,7 +167,7 @@ class _StreakHeroCard extends StatelessWidget {
             streak.currentStreak == 1 ? 'day streak' : 'day streak',
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: ZikrColors.inkMuted,
+              color: skin.inkMuted,
             ),
           ),
         ],
@@ -165,7 +177,7 @@ class _StreakHeroCard extends StatelessWidget {
 }
 
 /// Single stat tile
-class _StatTile extends StatelessWidget {
+class _StatTile extends ConsumerWidget {
   final String label;
   final String value;
   final String unit;
@@ -179,19 +191,21 @@ class _StatTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: skin.surfaceCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ZikrColors.divider, width: 0.5),
+        border: Border.all(color: skin.divider, width: 0.5),
       ),
       child: Column(
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(fontSize: 11, color: ZikrColors.inkMuted),
+            style: GoogleFonts.inter(fontSize: 11, color: skin.inkMuted),
           ),
           const SizedBox(height: 6),
           Text(
@@ -204,7 +218,7 @@ class _StatTile extends StatelessWidget {
           ),
           Text(
             unit,
-            style: GoogleFonts.inter(fontSize: 11, color: ZikrColors.inkMuted),
+            style: GoogleFonts.inter(fontSize: 11, color: skin.inkMuted),
           ),
         ],
       ),
@@ -213,7 +227,7 @@ class _StatTile extends StatelessWidget {
 }
 
 /// Calendar grid showing active/inactive days
-class _MonthCalendar extends StatelessWidget {
+class _MonthCalendar extends ConsumerWidget {
   final int year;
   final int month;
   final Set<String> activeDates;
@@ -225,7 +239,8 @@ class _MonthCalendar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
     final firstDay = DateTime(year, month, 1);
     final daysInMonth = DateTime(year, month + 1, 0).day;
     final startWeekday = firstDay.weekday % 7; // 0=Sun
@@ -242,7 +257,7 @@ class _MonthCalendar extends StatelessWidget {
                         d,
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          color: ZikrColors.inkMuted,
+                          color: skin.inkMuted,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -278,9 +293,9 @@ class _MonthCalendar extends StatelessWidget {
                     margin: const EdgeInsets.all(1),
                     decoration: BoxDecoration(
                       color: isActive
-                          ? ZikrColors.emerald
+                          ? skin.primary
                           : isToday
-                              ? ZikrColors.emeraldSoft
+                              ? skin.primarySoft
                               : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -293,8 +308,8 @@ class _MonthCalendar extends StatelessWidget {
                           color: isActive
                               ? Colors.white
                               : isFuture
-                                  ? ZikrColors.inkMuted.withValues(alpha: 0.3)
-                                  : ZikrColors.ink,
+                                  ? skin.inkMuted.withValues(alpha: 0.3)
+                                  : skin.ink,
                         ),
                       ),
                     ),

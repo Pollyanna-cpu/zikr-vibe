@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme.dart';
+import '../../../core/skin.dart';
 import '../../../core/prayer_api_service.dart';
 
 final prayerDataProvider = FutureProvider<_PrayerData>((ref) async {
@@ -161,13 +161,15 @@ class PrayerScreen extends ConsumerWidget {
   }
 }
 
-class _PrayerBody extends StatelessWidget {
+class _PrayerBody extends ConsumerWidget {
   final _PrayerData data;
 
   const _PrayerBody({required this.data});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -176,7 +178,7 @@ class _PrayerBody extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: ZikrColors.emerald,
+              color: skin.primary,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -213,19 +215,19 @@ class _PrayerBody extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
-              border: Border.all(color: ZikrColors.emerald),
+              border: Border.all(color: skin.primary),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.explore_rounded,
-                    color: ZikrColors.emerald, size: 20),
+                Icon(Icons.explore_rounded,
+                    color: skin.primary, size: 20),
                 const SizedBox(width: 10),
                 Text(
                   'Qibla: ${data.qiblaDirection.toStringAsFixed(1)}\u00B0',
-                  style: const TextStyle(
-                    color: ZikrColors.emerald,
+                  style: TextStyle(
+                    color: skin.primary,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
@@ -249,23 +251,25 @@ class _PrayerTime {
   _PrayerTime(this.name, this.time, this.isNext);
 }
 
-class _PrayerCard extends StatelessWidget {
+class _PrayerCard extends ConsumerWidget {
   final _PrayerTime prayer;
 
   const _PrayerCard({required this.prayer});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: prayer.isNext
-            ? ZikrColors.emerald.withValues(alpha: 0.08)
-            : Colors.white,
+            ? skin.primary.withValues(alpha: 0.08)
+            : skin.surfaceCard,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: prayer.isNext ? ZikrColors.emerald : ZikrColors.divider,
+          color: prayer.isNext ? skin.primary : skin.divider,
           width: prayer.isNext ? 1.5 : 1,
         ),
       ),
@@ -276,8 +280,8 @@ class _PrayerCard extends StatelessWidget {
               width: 8,
               height: 8,
               margin: const EdgeInsets.only(right: 12),
-              decoration: const BoxDecoration(
-                color: ZikrColors.emerald,
+              decoration: BoxDecoration(
+                color: skin.primary,
                 shape: BoxShape.circle,
               ),
             ),
@@ -286,7 +290,7 @@ class _PrayerCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: prayer.isNext ? FontWeight.w600 : FontWeight.w400,
-              color: ZikrColors.ink,
+              color: skin.ink,
             ),
           ),
           const Spacer(),
@@ -295,7 +299,7 @@ class _PrayerCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: prayer.isNext ? FontWeight.w600 : FontWeight.w400,
-              color: prayer.isNext ? ZikrColors.emerald : ZikrColors.inkMuted,
+              color: prayer.isNext ? skin.primary : skin.inkMuted,
             ),
           ),
         ],
