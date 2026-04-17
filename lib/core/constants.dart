@@ -1,8 +1,8 @@
 class AppConstants {
   // Supabase — fill after creating project
-  static const String supabaseUrl = 'https://nooeuncofhtzutbhquot.supabase.co';
+  static const String supabaseUrl = 'https://ocxnevqgjiyhwdfpskfc.supabase.co';
   static const String supabaseAnonKey =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vb2V1bmNvZmh0enV0YmhxdW90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzE2NzAsImV4cCI6MjA5MDcwNzY3MH0.PHwErzKHm_GNQyPYYAQYC3sFYt_wK7dX_Kmd7Xm9SE0';
+      'sb_publishable_59VVJzQz3J1hCHnaP1srVg_Km4Is8Lp';
 
   // Default dhikr types
   static const List<DhikrType> defaultDhikrTypes = [

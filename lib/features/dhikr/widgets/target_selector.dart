@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants.dart';
-import '../../../core/theme.dart';
+import '../../../core/skin.dart';
 
-class TargetSelector extends StatelessWidget {
+class TargetSelector extends ConsumerWidget {
   final int currentTarget;
   final ValueChanged<int> onTargetChanged;
 
@@ -13,7 +14,9 @@ class TargetSelector extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+
     return PopupMenuButton<int>(
       onSelected: onTargetChanged,
       offset: const Offset(0, 40),
@@ -21,7 +24,7 @@ class TargetSelector extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: ZikrColors.emerald.withValues(alpha: 0.1),
+          color: skin.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -29,16 +32,16 @@ class TargetSelector extends StatelessWidget {
           children: [
             Text(
               'Target: $currentTarget',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: ZikrColors.emerald,
+                color: skin.primary,
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(
+            Icon(
               Icons.arrow_drop_down_rounded,
-              color: ZikrColors.emerald,
+              color: skin.primary,
               size: 20,
             ),
           ],
@@ -51,7 +54,7 @@ class TargetSelector extends StatelessWidget {
             child: Row(
               children: [
                 if (target == currentTarget)
-                  const Icon(Icons.check_rounded, size: 18, color: ZikrColors.emerald)
+                  Icon(Icons.check_rounded, size: 18, color: skin.primary)
                 else
                   const SizedBox(width: 18),
                 const SizedBox(width: 8),
@@ -63,11 +66,11 @@ class TargetSelector extends StatelessWidget {
         const PopupMenuDivider(),
         PopupMenuItem(
           value: -1, // Signal for custom
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.edit_rounded, size: 18, color: ZikrColors.inkMuted),
-              SizedBox(width: 8),
-              Text('Custom...'),
+              Icon(Icons.edit_rounded, size: 18, color: skin.inkMuted),
+              const SizedBox(width: 8),
+              const Text('Custom...'),
             ],
           ),
           onTap: () {
