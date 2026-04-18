@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../../../core/analytics.dart';
 import '../models/counter_group.dart';
 
 /// Dhikr state: multiple persistent counter groups
@@ -74,6 +75,8 @@ class DhikrNotifier extends StateNotifier<DhikrState> {
       return;
     }
 
+    Analytics.dhikrStartIfFirstToday();
+
     group.count += 1;
 
     // Haptic feedback: strong pulse at tasbih milestones, light tap otherwise
@@ -81,6 +84,10 @@ class DhikrNotifier extends StateNotifier<DhikrState> {
       HapticFeedback.heavyImpact();
     } else {
       HapticFeedback.lightImpact();
+    }
+
+    if (group.count == 100) {
+      Analytics.dhikrComplete100();
     }
 
     state = state.copyWith(groups: [...state.groups]);
