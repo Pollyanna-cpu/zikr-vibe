@@ -1,0 +1,42 @@
+{
+  "@@locale": "ar",
+
+  "appTitle": "ذكر فايب",
+
+  "navDhikr": "ذِكر",
+  "navGroups": "المجموعات",
+  "navPrayer": "الصلاة",
+  "navProfile": "الملف",
+  "navStreak": "التتابع",
+
+  "actionAdd": "إضافة",
+  "actionCancel": "إلغاء",
+  "actionReset": "إعادة تعيين",
+  "actionSet": "تعيين",
+  "actionSkip": "تخطي",
+  "actionBack": "رجوع",
+  "actionJoin": "انضمام",
+  "actionCreate": "+ إنشاء",
+  "actionCustom": "مخصص...",
+
+  "newCounterTitle": "عداد جديد",
+  "counterHint": "لا إله إلا الله",
+  "resetPrompt": "إعادة تعيين {name}؟",
+  "counterResetNote": "سيعود العداد إلى 0",
+  "gestureHint": "انقر · اسحب · اضغط مطولاً",
+  "alhamdulillah": "الحمد لله",
+
+  "dayStreak": "{count,plural, =1{سلسلة يوم واحد}other{سلسلة {count} يوم}}",
+  "todayTotal": "{count} اليوم",
+
+  "yourJourney": "رحلتك",
+  "customTarget": "هدف مخصص",
+  "appearance": "المظهر",
+  "dhikrCircles": "حلقات الذكر",
+  "prayerTimes": "أوقات الصلاة",
+  "profileTitle": "الملف الشخصي",
+
+  "errorPrayerTimes": "تعذر تحميل أوقات الصلاة:\n{err}",
+  "errorGeneric": "خطأ: {err}",
+  "errorGoogleSignIn": "فشل تسجيل الدخول بحساب Google: {err}"
+}

@@ -1,0 +1,60 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Zikr Vibe",
+
+  "navDhikr": "Dhikr",
+  "navGroups": "Groups",
+  "navPrayer": "Prayer",
+  "navProfile": "Profile",
+  "navStreak": "Streak",
+
+  "actionAdd": "Add",
+  "actionCancel": "Cancel",
+  "actionReset": "Reset",
+  "actionSet": "Set",
+  "actionSkip": "Skip",
+  "actionBack": "Back",
+  "actionJoin": "Join",
+  "actionCreate": "+ Create",
+  "actionCustom": "Custom...",
+
+  "newCounterTitle": "New counter",
+  "counterHint": "La ilaha illallah",
+  "resetPrompt": "Reset {name}?",
+  "@resetPrompt": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "counterResetNote": "Counter will return to 0",
+  "gestureHint": "tap · swipe · hold",
+  "alhamdulillah": "Alhamdulillah",
+
+  "dayStreak": "{count,plural, =1{1 day streak}other{{count} day streak}}",
+  "@dayStreak": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "todayTotal": "{count} today",
+  "@todayTotal": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+
+  "yourJourney": "Your Journey",
+  "customTarget": "Custom target",
+  "appearance": "Appearance",
+  "dhikrCircles": "Dhikr Circles",
+  "prayerTimes": "Prayer Times",
+  "profileTitle": "Profile",
+
+  "errorPrayerTimes": "Could not load prayer times:\n{err}",
+  "@errorPrayerTimes": {
+    "placeholders": {"err": {"type": "String"}}
+  },
+  "errorGeneric": "Error: {err}",
+  "@errorGeneric": {
+    "placeholders": {"err": {"type": "String"}}
+  },
+  "errorGoogleSignIn": "Google sign in failed: {err}",
+  "@errorGoogleSignIn": {
+    "placeholders": {"err": {"type": "String"}}
+  }
+}

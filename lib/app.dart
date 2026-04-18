@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme.dart';
 import 'core/router.dart';
 import 'core/skin.dart';
+import 'l10n/app_localizations.dart';
 
 class ZikrVibeApp extends ConsumerWidget {
   const ZikrVibeApp({super.key});
@@ -19,6 +21,8 @@ class ZikrVibeApp extends ConsumerWidget {
       darkTheme: ZikrTheme.darkFrom(skin),
       themeMode: ThemeMode.system,
       routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
     );
   }
 }
