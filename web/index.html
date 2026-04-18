@@ -61,10 +61,36 @@
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "Organization",
+        "@id": "https://www.nbidea.ai/#organization",
+        "name": "Soul Vibe Technology",
+        "alternateName": "Nbidea",
+        "url": "https://www.nbidea.ai",
+        "sameAs": [
+          "https://soulvibeai.com",
+          "https://app.zikrvibe.com",
+          "https://zikrvibe.com",
+          "https://soulthread.nbidea.ai",
+          "https://ai-fitness-snowy.vercel.app",
+          "https://www.instagram.com/soul_vibe_ring",
+          "https://youtube.com/@soulvibeai"
+        ],
+        "founder": {
+          "@type": "Person",
+          "@id": "https://www.nbidea.ai/#founder",
+          "name": "Pollyanna",
+          "jobTitle": "Founder & CEO"
+        },
+        "foundingLocation": {"@type": "Place", "name": "Hong Kong"},
+        "award": ["EIA 2025 Startup Champion", "EWC 2025 Global Top 1000"]
+      },
+      {
         "@type": "MobileApplication",
         "@id": "https://app.zikrvibe.com/#app",
         "name": "Zikr Vibe",
         "alternateName": "Zikr Vibe Dhikr Counter",
+        "publisher": {"@id": "https://www.nbidea.ai/#organization"},
+        "creator": {"@id": "https://www.nbidea.ai/#organization"},
         "applicationCategory": "LifestyleApplication",
         "applicationSubCategory": "Religious",
         "operatingSystem": "iOS, Android, Web",

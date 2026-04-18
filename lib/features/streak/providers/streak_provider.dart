@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/analytics.dart';
 
 class StreakState {
   final int currentStreak;
@@ -121,6 +122,8 @@ class StreakNotifier extends StateNotifier<StreakState> {
       activeDates: updated,
       lastActiveDate: today,
     );
+
+    Analytics.streakDay2IfNew(streak);
   }
 
   /// Refresh totals from counter data
