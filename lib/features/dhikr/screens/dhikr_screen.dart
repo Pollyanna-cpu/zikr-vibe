@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../../core/skin.dart';
+import '../../../l10n/app_localizations.dart';
 import '../providers/dhikr_provider.dart';
 import '../models/counter_group.dart';
 import '../../streak/providers/streak_provider.dart';
@@ -255,7 +256,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                                     const Text('🔥', style: TextStyle(fontSize: 14)),
                                     const SizedBox(width: 6),
                                     Text(
-                                      '${streak.currentStreak} day streak',
+                                      AppLocalizations.of(context).dayStreak(streak.currentStreak),
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         color: skin.primary,
@@ -271,7 +272,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                           const SizedBox(height: 6),
                           if (dhikr.dailyTotal > 0)
                             Text(
-                              '${dhikr.dailyTotal} today',
+                              AppLocalizations.of(context).todayTotal(dhikr.dailyTotal),
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 color: skin.inkMuted,
@@ -280,7 +281,9 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                             ),
                           const SizedBox(height: 4),
                           Text(
-                            group.isAtMax ? 'Alhamdulillah' : 'tap · swipe · hold',
+                            group.isAtMax
+                                ? AppLocalizations.of(context).alhamdulillah
+                                : AppLocalizations.of(context).gestureHint,
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: skin.inkMuted.withValues(alpha: 0.5),
@@ -324,7 +327,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
               ),
               const SizedBox(height: 24),
               Text(
-                'Reset $name?',
+                AppLocalizations.of(context).resetPrompt(name),
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -333,7 +336,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Counter will return to 0',
+                AppLocalizations.of(context).counterResetNote,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: skin.inkSoft,
@@ -353,7 +356,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                         ),
                       ),
                       child: Text(
-                        'Cancel',
+                        AppLocalizations.of(context).actionCancel,
                         style: GoogleFonts.inter(
                           color: skin.inkSoft,
                           fontWeight: FontWeight.w500,
@@ -376,7 +379,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                         ),
                       ),
                       child: Text(
-                        'Reset',
+                        AppLocalizations.of(context).actionReset,
                         style: GoogleFonts.inter(
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
@@ -424,7 +427,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              'New counter',
+              AppLocalizations.of(context).newCounterTitle,
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -438,7 +441,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
               textCapitalization: TextCapitalization.words,
               style: GoogleFonts.inter(fontSize: 16),
               decoration: InputDecoration(
-                hintText: 'La ilaha illallah',
+                hintText: AppLocalizations.of(context).counterHint,
                 hintStyle: GoogleFonts.inter(color: skin.inkMuted),
                 filled: true,
                 fillColor: skin.surface,
@@ -470,7 +473,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                   ),
                 ),
                 child: Text(
-                  'Add',
+                  AppLocalizations.of(context).actionAdd,
                   style: GoogleFonts.inter(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,

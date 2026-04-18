@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../l10n/app_localizations.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -17,6 +18,7 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
     return Scaffold(
       body: child,
       bottomNavigationBar: BottomNavigationBar(
@@ -33,22 +35,22 @@ class MainShell extends StatelessWidget {
               context.go('/profile');
           }
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.touch_app_rounded),
-            label: 'Dhikr',
+            icon: const Icon(Icons.touch_app_rounded),
+            label: t.navDhikr,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.group_rounded),
-            label: 'Groups',
+            icon: const Icon(Icons.group_rounded),
+            label: t.navGroups,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.mosque_rounded),
-            label: 'Prayer',
+            icon: const Icon(Icons.mosque_rounded),
+            label: t.navPrayer,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_rounded),
-            label: 'Profile',
+            icon: const Icon(Icons.person_rounded),
+            label: t.navProfile,
           ),
         ],
       ),

@@ -182,7 +182,7 @@ class ZikrSkins {
   /// Misty Rose — lavender pink. Cream fog over rose gardens.
   static const mistyRose = ZikrSkin(
     id: 'misty_rose',
-    name: '奶雾蔷薇',
+    name: 'Misty Rose',
     nameAr: 'ضباب الورد',
     description: 'Lavender pink. Soft and dreamy.',
     isFree: true, // TODO: set false after preview
@@ -213,7 +213,7 @@ class ZikrSkins {
   /// Mint Fog — fresh mint green. Morning dew on leaves.
   static const mintFog = ZikrSkin(
     id: 'mint_fog',
-    name: '清雾薄荷',
+    name: 'Mint Fog',
     nameAr: 'نعناع الضباب',
     description: 'Fresh mint. Cool and calm.',
     isFree: true, // TODO: set false after preview
@@ -244,7 +244,7 @@ class ZikrSkins {
   /// Haze Lilac — soft purple. Twilight clouds.
   static const hazeLilac = ZikrSkin(
     id: 'haze_lilac',
-    name: '雾霞柔紫',
+    name: 'Haze Lilac',
     nameAr: 'ضباب أرجواني',
     description: 'Soft lilac. Twilight sky.',
     isFree: true, // TODO: set false after preview
