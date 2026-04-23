@@ -1,8 +1,10 @@
 # User Stories: Zikr Vibe App MVP (P0)
 
-**Date**: 2026-04-02
+**Date**: 2026-04-02 (canonical) — updated 2026-04-24 for companionship/privacy pivot
 **Sprint scope**: 6 weeks → App Store + Play Store submission
 **Format**: User Story + Acceptance Criteria + Effort estimate
+
+**Canonical reference**: See `Zikr-Vibe-App-PRD.md` for full P0-P2 definitions and rationale.
 
 ---
 
@@ -14,15 +16,17 @@
 **so that** I don't lose count.
 
 **Acceptance Criteria:**
-- [ ] Full-screen tap zone (lower 70% of screen = tappable)
+- [ ] Full-screen tap zone (lower 80% of screen = tappable)
 - [ ] Count increments by 1 per tap
-- [ ] Haptic feedback on each tap (short vibration)
+- [ ] **Light haptic on each tap + strong distinct vibration at 33/66/99 milestones** (eyes-closed tasbih, user research: "I want to close my eyes and feel the count")
+- [ ] 33-bead progress visualization (circular dots showing position in current round)
 - [ ] Count displayed prominently (large font, center screen)
 - [ ] Works in portrait mode only (one-hand use)
-- [ ] Counter persists if app is backgrounded mid-session
-- [ ] Reset button with "Are you sure?" confirmation
+- [ ] Counter persists if app is backgrounded mid-session, force-quit, or battery death (Hive local storage, write-on-every-tap)
+- [ ] **Long-press to reset** with bottom-sheet confirmation (matches user review: "when I have to clean the dhikr I have to tap THREE TIMES, drives me nuts")
+- [ ] Distraction-free: no notification overlays, minimal UI chrome during active counting
 
-**Effort**: 0.5 day
+**Effort**: 1 day (haptic milestone + 33-bead visualization adds complexity)
 
 ---
 
@@ -60,19 +64,51 @@
 
 ---
 
-### US-1.4: Session Save
+### US-1.4: Local Persistence (Privacy-First)
 **As a** user,
-**I want** my dhikr sessions saved automatically,
-**so that** I never lose my progress.
+**I want** my dhikr counts saved permanently on my device,
+**so that** I never lose my progress AND my dhikr data never leaves my phone.
 
 **Acceptance Criteria:**
-- [ ] Session auto-saves to local storage on each count
-- [ ] Session syncs to Supabase when network available
-- [ ] Session record: dhikr type, count, start time, end time, date
-- [ ] If offline, queues syncs and pushes when reconnected
+- [ ] Session auto-saves to local Hive storage on each count (write-on-every-tap, ACID-safe)
+- [ ] Session record: dhikr type, count, start time, end time, date — **stored locally only**
+- [ ] **Dhikr data never syncs to any server** (privacy promise — see PRD §9)
+- [ ] Only circle presence (boolean "did dhikr today") syncs, never counts
+- [ ] Counts survive force quit, restart, backgrounding, battery death
 - [ ] No "save" button needed — everything is automatic
 
 **Effort**: 1 day
+
+---
+
+### US-1.5: Zero Ads Enforcement (Architectural Guarantee)
+**As a** user,
+**I want** to never see ads in Zikr Vibe — not even during Ramadan, not even for "halal" products,
+**so that** my worship is not interrupted.
+
+**Acceptance Criteria:**
+- [ ] No ad SDK in `pubspec.yaml` (not AdMob, not Facebook Audience Network, not anything)
+- [ ] No ad-ready code paths, no "if (adsEnabled)" conditionals anywhere
+- [ ] CI lint rule (optional but recommended): fail build if any ad-related dependency added
+- [ ] App Store / Play Store listing explicitly: "No ads. No data selling."
+
+**Effort**: 0 days (enforcement by exclusion — verify in code review)
+
+---
+
+### US-1.6: Zero Data Collection on Prayer Content
+**As a** user,
+**I want** my dhikr type, count, and frequency never tracked or analyzed,
+**so that** my worship data cannot be sold, leaked, or breached.
+
+**Acceptance Criteria:**
+- [ ] No Firebase Analytics SDK in dependencies (remove entirely)
+- [ ] No custom analytics on dhikr content
+- [ ] Crashlytics opt-in only, with explicit consent dialog at first launch
+- [ ] Privacy policy explicitly lists: what we collect (email + display name for circles only), what we don't (dhikr content, location, IP)
+- [ ] Supabase database schema: no `count` column on any server-side table (architectural guarantee)
+
+**Effort**: 0.5 day (consent dialog + schema audit)
 
 ---
 
@@ -127,86 +163,113 @@
 
 ---
 
-## Epic 3: Groups & Ranking (Week 3)
+## Epic 3: Companion Circles (Week 3) — NOT Ranking
 
-### US-3.1: Create Group
+**Design rationale**: Research invalidated the ranking thesis. Devout Muslims consider sharing dhikr counts as riya' (showing off). Circles show **presence, not volume**. See PRD §8 (Companion Circles Redesigned).
+
+### US-3.1: Create Circle
 **As a** user,
-**I want to** create a dhikr group,
-**so that** I can track with friends.
+**I want to** create a private dhikr circle for family or close friends,
+**so that** we can support each other's practice without competing.
 
 **Acceptance Criteria:**
-- [ ] Group name (required, 3-30 chars)
-- [ ] Group description (optional, 100 chars max)
+- [ ] Circle name (required, 3-30 chars)
+- [ ] Circle description (optional, 100 chars max)
 - [ ] Creator becomes admin
-- [ ] Max 50 members per group (v1.0)
-- [ ] User can be in up to 5 groups
-- [ ] Group gets a unique invite code
+- [ ] **Max 10 members per circle** (intimate, not broadcast)
+- [ ] User can be in up to 5 circles
+- [ ] Circle gets a unique invite code
 
 **Effort**: 1 day
 
 ---
 
-### US-3.2: Invite to Group
-**As a** group admin or member,
-**I want to** invite friends via WhatsApp/SMS link,
+### US-3.2: Invite to Circle
+**As a** circle admin or member,
+**I want to** invite friends via WhatsApp link,
 **so that** they join my circle.
 
 **Acceptance Criteria:**
 - [ ] "Invite" button generates shareable link
-- [ ] Pre-written WhatsApp message: "Join my dhikr circle '[Group Name]' on Zikr Vibe — let's see who's most consistent! [link]"
+- [ ] Pre-written WhatsApp message (companionship framing, NOT competition):
+  - EN: *"Join my dhikr circle on Zikr Vibe — let's remember Allah together. [link]"*
+  - AR: *"انضم إلى دائرة الذكر الخاصة بي — لنذكر الله معًا"*
 - [ ] Share sheet supports: WhatsApp, SMS, Copy Link, other apps
-- [ ] Link uses Firebase Dynamic Links (deferred deep linking)
-- [ ] New user: link → App Store/Play Store → install → auto-join group
-- [ ] Existing user: link → opens app → auto-join group
+- [ ] Link uses `app_links` (Universal Links / App Links) — **NOT Firebase Dynamic Links** (deprecated)
+- [ ] Self-hosted redirect: `https://zikrvibe.com/join/CIRCLE_CODE`
+- [ ] New user: link → App Store/Play Store → install → auto-join circle (deferred deep link)
+- [ ] Existing user: link → opens app → auto-join circle
 - [ ] Invite link expires after 7 days (regeneratable)
 
 **Effort**: 2 days (deep linking is complex)
 
 ---
 
-### US-3.3: Group Leaderboard
-**As a** group member,
-**I want to** see who's most consistent this week/month,
-**so that** I stay accountable.
+### US-3.3: Companionship Board (NOT Leaderboard)
+**As a** circle member,
+**I want to** see who did their dhikr today — not how much, just presence,
+**so that** I feel accompanied without being judged or comparing.
 
 **Acceptance Criteria:**
-- [ ] Leaderboard sorted by consistency score: (days active ÷ total days in period) × 100%
-- [ ] Toggle: This Week / This Month
-- [ ] Each row shows: rank, name, avatar, consistency %, current streak, total dhikr this period
-- [ ] Current user's row highlighted
-- [ ] Updates within 5 minutes of new dhikr session
-- [ ] Group total dhikr displayed at top
+- [ ] Board shows each member's name + binary status:
+  - ✓ if they did dhikr today
+  - · with "last active: yesterday / 3 days ago" otherwise
+- [ ] **NO counts displayed anywhere** (no numbers, no ranks, no "total dhikr this week")
+- [ ] **NO ranking or sorting by activity** (alphabetical or join-order only)
+- [ ] Only your OWN streak shown privately (never others' streaks)
+- [ ] Summary: "X of Y members remembered Allah today" (aggregate presence, not individual counts)
+- [ ] Weekly view: calendar grid showing who was active which days (✓/· only)
+- [ ] Updates within 5 minutes of a member's first dhikr of the day
+- [ ] Design rationale prominent in onboarding: "Ibadah is between you and Allah"
 
 **Effort**: 1.5 days
 
 ---
 
-### US-3.4: Join Group
+### US-3.4: Join Circle
 **As an** invited user,
-**I want to** join a group from an invite link,
-**so that** I can see the leaderboard and participate.
+**I want to** join a circle from an invite link,
+**so that** I can be present with my family/friends.
 
 **Acceptance Criteria:**
-- [ ] Clicking invite link while app installed → app opens → "Join [Group Name]?" confirmation → joined
+- [ ] Clicking invite link while app installed → app opens → "Join [Circle Name]?" confirmation → joined
 - [ ] Clicking invite link without app → App Store/Play Store → install → onboarding → auto-join
-- [ ] User appears on leaderboard immediately after joining
-- [ ] User can leave group anytime (settings within group screen)
+- [ ] Onboarding landing page (web): shows circle name + member count + "Your data stays on your device" (privacy framing)
+- [ ] User appears on board immediately after joining
+- [ ] User can leave circle anytime (settings within circle screen)
 
 **Effort**: 1 day (depends on deep link work in US-3.2)
 
 ---
 
-### US-3.5: Group List
-**As a** user in multiple groups,
-**I want to** see all my groups in one place,
+### US-3.5: Circle List
+**As a** user in multiple circles,
+**I want to** see all my circles in one place,
 **so that** I can switch between them.
 
 **Acceptance Criteria:**
-- [ ] Groups tab shows list of joined groups
-- [ ] Each group card: name, member count, my rank this week
-- [ ] "Create Group" button at top
-- [ ] "Join Group" (enter code) option
-- [ ] Tap group → goes to group leaderboard
+- [ ] Circle tab (🤝) shows list of joined circles
+- [ ] Each circle card: name, member count, "X of Y present today" (aggregate only, no individual stats)
+- [ ] "Create Circle" button at top
+- [ ] "Join Circle" (enter code) option
+- [ ] "Join an Open Circle" option for users without friends on app (solves empty-room problem — Pre-Mortem T4)
+- [ ] Tap circle → goes to Companionship Board
+
+**Effort**: 0.5 day
+
+---
+
+### US-3.6: Gentle Nudge (Optional)
+**As a** circle member,
+**I want to** send a "thinking of you" tap to a member who hasn't checked in today,
+**so that** I can gently encourage without policing.
+
+**Acceptance Criteria:**
+- [ ] Available only if member hasn't checked in by evening (local time)
+- [ ] One-tap sends a content-free nudge (no message, just presence)
+- [ ] Max 1 nudge per member per day
+- [ ] Recipient sees: "[Name] is thinking of you" (no judgment, no "you haven't done your dhikr")
+- [ ] Opt-out in settings
 
 **Effort**: 0.5 day
 
@@ -267,35 +330,43 @@
 
 ## Epic 5: Auth & Onboarding (Week 1-2)
 
-### US-5.1: Sign Up / Sign In
+### US-5.1: Sign Up / Sign In (Optional — app works without login)
 **As a** new user,
-**I want to** create an account quickly,
-**so that** my data is saved and synced.
+**I want to** use the app immediately without signing up,
+**so that** I can start counting without committing to an account.
 
 **Acceptance Criteria:**
-- [ ] Sign in with Apple (required for iOS)
+- [ ] **"Skip — Count without account" option prominent on login screen**
+- [ ] Sign in with Apple (required for iOS App Store if offering auth at all)
 - [ ] Sign in with Google
 - [ ] Sign in with email + password (fallback)
-- [ ] Set display name during onboarding
+- [ ] Set display name during onboarding (only if signing up — required for circles)
 - [ ] Optional avatar (photo or default icon)
 - [ ] Account → Supabase Auth
+- [ ] If user skips login: all dhikr data stored locally, circles feature disabled
+- [ ] User can sign up later to unlock circles without losing local data
 
 **Effort**: 1 day
 
 ---
 
-### US-5.2: Onboarding Flow
+### US-5.2: Onboarding Flow (Three Promises)
 **As a** new user,
-**I want** a brief introduction,
-**so that** I understand the app quickly.
+**I want** a brief, privacy-first introduction,
+**so that** I understand what Zikr Vibe does and doesn't do before granting permissions.
 
 **Acceptance Criteria:**
-- [ ] 3 screens max: (1) "Count your dhikr" (2) "Track your streak" (3) "Compete with friends"
+- [ ] 3 screens max, reflecting the Three Promises (PRD §10):
+  - **Screen 1**: *"Your dhikr is private."* No data collection. No cloud. Local-first.
+  - **Screen 2**: *"Your worship is sacred."* No ads. No scores. No judgment.
+  - **Screen 3**: *"Your tool is reliable."* Count persists. Works offline. Doesn't break.
 - [ ] Skip button on every screen
-- [ ] Request notification permission (prayer reminders)
-- [ ] Request location permission (prayer times + Qibla)
-- [ ] If user arrived via group invite: show "Join [Name]'s group?" after onboarding
+- [ ] **Permission requests AT LAST screen, with clear rationale** (not before trust is established):
+  - Notification permission → "For prayer time reminders. Off by default."
+  - Location permission → "For prayer times + Qibla. Never sent to our servers."
+- [ ] If user arrived via circle invite: show "Join [Name]'s dhikr circle?" after onboarding
 - [ ] Goes directly to dhikr counter after onboarding
+- [ ] Onboarding works without login (show "skip login" option after Screen 3)
 
 **Effort**: 0.5 day
 
@@ -340,15 +411,15 @@
 
 | Week | Epics | Total Effort |
 |------|-------|-------------|
-| 1 | Dhikr Counter (E1) + Auth (E5) | 5 days |
+| 1 | Dhikr Counter (E1: includes Zero Ads + Zero Data + local persistence) + Auth (E5) | 6 days |
 | 2 | Streak & History (E2) + Auth finish | 4 days |
-| 3 | Groups & Ranking (E3) | 6 days |
+| 3 | Companion Circles (E3: presence not ranking) | 6.5 days |
 | 4 | Prayer Times & Qibla (E4) | 3.5 days |
 | 5 | Polish & UI Theme (E6) | 3 days |
 | 6 | Testing, Bug Fixes, Submission | 3 days |
-| **Total** | | **24.5 dev days** |
+| **Total** | | **26 dev days** |
 
-Fits within 6 weeks with buffer for unexpected issues.
+Fits within 6 weeks with small buffer for unexpected issues. Circle Loop deep linking (US-3.2) is the highest-risk item — see Pre-Mortem T1.
 
 ---
 

@@ -1,7 +1,11 @@
-# Growth Loops: Zikr Vibe
+# Growth Loops: Zikr Vibe **Hardware Ring**
 
 **Confidential — Internal Use Only**
 **Generated**: 2026-04-02
+
+> ⚠️ **This document covers the HARDWARE ring strategy.** For the app (current primary product), see [`Zikr-Vibe-App-GrowthLoops.md`](./Zikr-Vibe-App-GrowthLoops.md).
+>
+> The hardware ring plan below is preserved for when ring SDK becomes available and hardware launches as a premium accessory. The ranking-based loops described here were validated for hardware (purchase commitment signals intent) but **were invalidated for the app** by subsequent research (riya' concern for free users). Do not copy the Mosque/Collaboration Loop into the app — see canonical App PRD §8 Companion Circles.
 
 ---
 
