@@ -1,19 +1,21 @@
 # Product Requirements Document: Zikr Vibe App
 
 **Author**: Yun / Soul Vibe Technology
-**Date**: 2026-04-02
-**Status**: Draft
+**Date**: 2026-04-02 (canonical) — merged 2026-04-24
+**Status**: Canonical (supersedes PRD-v2)
 **Stakeholders**: Yun (CEO), Claude (Dev)
+**Tagline**: *"Count your dhikr. Nothing else watches."*
 
 ---
 
 ## 1. Executive Summary
 
-Zikr Vibe is a **free mobile app** for Islamic dhikr (remembrance of Allah) — **distraction-free, private, and consistent**. No hardware required — tap the screen to count, feel the vibration at 33/66/99, see your streak. No ads, no data selling, no judgment. The only dhikr app built around **privacy and companionship** rather than competition.
+Zikr Vibe is a **free mobile app** for Islamic dhikr (remembrance of Allah) — **distraction-free, private, and consistent**. No hardware required. Tap the screen to count, feel the vibration at 33/66/99, see your streak. No ads. No data selling. No judgment. The only dhikr app built around **privacy and companionship** rather than competition.
 
-**Why now**: 1.8B Muslims have no good digital tool for dhikr practice. Muslim Pro (170M+ downloads, 2.9★ Trustpilot) shows haram ads and sold user data to US military contractors. Tasbeeh counter apps are ugly solo tools riddled with ads. iQibla Life requires a $39+ ring with terrible Bluetooth reliability. **The market is large, the incumbents are broken, and the trust gap is wide open.**
+**Why now**: Every major Muslim app has betrayed its users. Muslim Pro (170M+ downloads, 2.9★ Trustpilot) shows haram ads and sold user location data to US military contractors. Tasbeeh counter apps are ugly solo tools riddled with haram ads even after paying. iQibla Life requires a $39+ ring with terrible Bluetooth reliability and battery-death data loss. **The bar is on the floor. We pick it up by doing the one thing nobody does: respect the user.**
 
-**One-line positioning**: *"Count your dhikr. No ads. No data selling. No broken hardware. Just you and your remembrance."*
+**One-line positioning**: *"Count your dhikr. Nothing else watches."*
+**Subline**: *No ads. No data selling. No broken hardware. Just you and your remembrance.*
 
 ---
 
@@ -53,7 +55,28 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 
 ---
 
-## 3. Objectives & Success Metrics
+## 3. What Changed (Research Findings, 2026-04-02)
+
+Two rounds of user research against the initial PRD produced the following delta:
+
+### Validated assumptions
+- Distraction-free counting is the #1 pain → our core feature
+- Ad-free is not a feature, it's table stakes → users feel **violated** by haram ads during dhikr
+- iQibla proved demand exists but failed on quality → market is pre-educated
+- Simplicity wins → Pillars (4.8★) is praised BECAUSE it's minimal
+
+### Invalidated assumptions
+- ~~Group ranking drives viral growth~~ → **Wrong.** Devout Muslims consider sharing dhikr counts as riya' (showing off). The most religious users — our core ICP — would actively avoid a leaderboard. "Ibadah is between you and Allah, not you and a leaderboard."
+- ~~Social sharing is a growth engine~~ → **Partially wrong.** Milestone sharing cards might work for younger/casual users, but core users won't share counts publicly. Share streak days (binary consistency), never counts (volume).
+
+### New insights
+- **Privacy is a weapon**, not just a feature. Muslim Pro's data scandal still echoes. "Your dhikr is between you and Allah, not you and a data broker" is a killer positioning line.
+- **33-count vibration** is the single most requested smart feature across all dhikr app reviews. It maps directly to the physical rhythm of tasbih beads.
+- **Group companionship** (who showed up today?) is valued. **Group competition** (who did more?) is not.
+
+---
+
+## 4. Objectives & Success Metrics
 
 ### Goals
 
@@ -61,6 +84,7 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 2. **Acquire 10,000 users in first 90 days** (organic + lightweight paid)
 3. **Prove companionship groups drive retention** — users in groups retain 2x better than solo users
 4. **Establish Zikr Vibe as the #1 privacy-first dhikr app** — own the trust gap Muslim Pro left behind
+5. **Hit Pillars-level rating (4.8★+) by being respectful** — quality signal in the Muslim community
 
 ### Non-Goals (v1.0)
 
@@ -74,32 +98,34 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 | Social leaderboards / public ranking | **Research finding**: devout Muslims actively avoid sharing dhikr counts — ibadah is between you and Allah, public sharing is considered riya' (showing off). Group feature = companionship, not competition |
 | Period tracking | Too niche, not a dhikr counter's job |
 | Arabic-only UI | Start with English (Gulf HNW speak English). Add Arabic in v1.1 |
+| Subscription model | Users traumatized by Muslim Pro subscription traps |
 
 ### Success Metrics
 
 | Metric | Target (30 days) | Target (90 days) | Measurement |
 |--------|-----------------|-----------------|-------------|
 | Downloads | 2,000 | 10,000 | App Store Connect + Google Play Console |
-| DAU / MAU ratio | 30% | 40% | Firebase Analytics |
+| DAU / MAU ratio | 35% | 45% | Firebase Analytics |
 | Companionship groups created | 200 | 1,500 | Backend |
 | Avg group size | 3 | 5 | Backend |
 | Invites sent per group creator | 4 | 6 | Backend |
 | Invite → Install conversion | 15% | 25% | Deep link tracking |
-| 7-day retention | 35% | 45% | Firebase |
-| 30-day retention | 15% | 25% | Firebase |
+| 7-day retention | 40% | 50% | Firebase |
+| 30-day retention | 20% | 30% | Firebase |
 | Users in groups vs solo | 40% | 60% | Backend |
 | Daily check-in rate (group members) | 50% | 70% | Backend |
-| App Store rating | 4.5+ | 4.5+ | App Store / Play Store |
+| App Store rating | 4.7+ | 4.8+ | App Store / Play Store |
 
 ### Kill Criteria
 
 - DAU/MAU < 15% after 60 days → Core engagement loop is broken
 - Group users don't retain better than solo → Companionship thesis is wrong, pivot
 - < 500 downloads after 30 days with marketing effort → Market doesn't exist
+- App Store rating < 4.0 after 50 reviews → Stop marketing, fix issues
 
 ---
 
-## 4. Target Users & Segments
+## 5. Target Users & Segments
 
 ### Primary: Gulf Practicing Muslim Men (UAE/KSA)
 
@@ -109,7 +135,7 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 | Location | UAE, KSA, Qatar |
 | Faith practice | Prays 5x daily, does dhikr regularly |
 | Tech behavior | iPhone or Android, uses WhatsApp daily, has Muslim Pro installed |
-| Motivation | Wants to be more consistent in dhikr, wants community accountability |
+| Motivation | Wants to be more consistent in dhikr, wants gentle community accountability |
 | Current solution | Physical beads + maybe a basic counter app |
 | Language | English (primary), Arabic (secondary) |
 
@@ -120,7 +146,7 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 | SEA Muslims (Malaysia, Indonesia) | v1.1 | Bahasa localization needed |
 | Western diaspora (US, UK, Canada) | v1.0 | English works |
 | Women | v1.0 | Same features, may need gender-separated groups option |
-| Youth (18-24) | v1.0 | Most likely to adopt social features + share milestones |
+| Youth (18-24) | v1.0 | Most likely to adopt milestone sharing (days, not counts) |
 | Ramadan-focused | Seasonal | Casual users who engage during Ramadan only |
 
 ### User Archetypes
@@ -135,85 +161,102 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 
 ---
 
-## 5. User Stories & Requirements
+## 6. User Stories & Requirements
 
 ### P0 — Must Have (MVP, ship in 6 weeks)
 
 | # | User Story | Acceptance Criteria |
 |---|-----------|-------------------|
-| P0-1 | **Dhikr Counter**: As a Muslim, I want to tap the screen to count my dhikr so I don't lose count without getting distracted by my phone | - Full-screen tap zone (large, easy to hit) - Light haptic per tap + **strong distinct vibration at 33/66/99 milestones** (eyes-closed tasbih — user research: "I want to close my eyes and just feel the count") - Count displayed prominently - 33-bead progress visualization (circular dots showing position in current round) - Reset button with confirmation - Supports portrait mode (one-hand use) - **Distraction-free**: minimal UI chrome during active counting, no notifications overlay |
-| P0-2 | **Preset Targets**: As a user, I want to select dhikr presets (33, 66, 99, 100) so I complete my sets accurately | - 4 preset buttons + custom number input - Vibration alert when target reached - Auto-reset option after target hit - Shows progress ring/bar toward target |
-| P0-3 | **Multiple Dhikr Types**: As a user, I want to switch between dhikr types (SubhanAllah, Alhamdulillah, Allahu Akbar, La ilaha illallah, custom) | - Pre-loaded 4 core dhikr types with Arabic text + transliteration - Custom dhikr: user enters text + optional target - Each type tracks count independently - Quick switch between types |
-| P0-4 | **Daily Dhikr Log**: As a user, I want my daily dhikr counts saved automatically so I can see my history | - Auto-save every session to local + cloud - Daily total across all dhikr types - Calendar view showing dhikr days (green) vs missed days - Weekly/monthly summary |
-| P0-5 | **Streak Tracking**: As a user, I want to see my current streak (consecutive days with dhikr) so I stay motivated | - Current streak count displayed on home screen - Longest streak record - Streak milestones: 7, 30, 100, 365 days - Streak resets if no dhikr recorded by midnight local time |
-| P0-6 | **Create Group**: As a user, I want to create a dhikr group and name it so I can track with friends | - Create group with name + optional description - Group creator is admin - Max 50 members per group (v1.0) - User can be in up to 5 groups |
-| P0-7 | **Invite to Group**: As a user, I want to invite friends via WhatsApp/SMS link so they join my group | - Generate shareable invite link - Pre-written WhatsApp message: "Join my dhikr circle on Zikr Vibe — [link]" - Link opens app (if installed) or App Store/Play Store (if not) - Invited user auto-joins group on first login |
-| P0-8 | **Group Companionship Board**: As a group member, I want to see who did their dhikr today — not how much, just that they showed up | - Binary check-in: ✓ (did dhikr today) or empty (not yet) — **no counts, no ranking, no competition** - Shows each member's current streak (number only, no comparison) - Gentle nudge: if a member hasn't done dhikr by evening, option to send a private "thinking of you" tap - Weekly view: calendar grid showing who was active which days - **Design rationale**: ibadah is between you and Allah. Public counting is riya' (showing off). Companionship = "I know you're on this path too", not "I did more than you" |
-| P0-9 | **Prayer Times**: As a Muslim, I want to see today's 5 prayer times based on my location | - Auto-detect location (GPS) - Show Fajr, Dhuhr, Asr, Maghrib, Isha times - Calculation method selector (Umm al-Qura, ISNA, Muslim World League, etc.) - Next prayer countdown |
-| P0-10 | **Prayer Notifications**: As a user, I want push notifications before each prayer so I don't miss | - Configurable: X minutes before each prayer - Per-prayer toggle (enable/disable individually) - Notification sound options (adhan clip or silent) - Respects Do Not Disturb |
-| P0-11 | **Auth + Profile**: As a user, I want to sign up and have my data synced across devices | - Sign up with Apple / Google / Email - Display name + optional avatar - Data syncs via backend - Profile shows: total lifetime dhikr, current streak, groups |
-| P0-12 | **Qibla Compass**: As a user, I want to see the direction of Mecca from my current location | - Uses device compass + GPS - Arrow pointing to Kaaba - Distance to Mecca displayed - Accuracy indicator |
+| P0-1 | **Dhikr Counter**: As a Muslim, I want to tap the screen to count my dhikr so I don't lose count without getting distracted by my phone | - Full-screen tap zone (large, easy to hit) - Light haptic per tap + **strong distinct vibration at 33/66/99 milestones** (eyes-closed tasbih — user research: "I want to close my eyes and just feel the count") - Count displayed prominently - 33-bead progress visualization (circular dots showing position in current round) - Long-press to reset with bottom sheet confirmation - Supports portrait mode (one-hand use) - **Distraction-free**: minimal UI chrome during active counting, no notifications overlay |
+| P0-2 | **Preset Targets**: As a user, I want to select dhikr presets (33, 66, 99, 100) so I complete my sets accurately | - 4 preset buttons + custom number input up to 9999 - Vibration alert when target reached - Auto-reset option after target hit - Shows progress ring/bar toward target |
+| P0-3 | **Multiple Dhikr Types (3-5 counter groups)**: As a user, I want to switch between dhikr types (SubhanAllah, Alhamdulillah, Allahu Akbar, La ilaha illallah, custom) | - Pre-loaded 4 core dhikr types with Arabic text + transliteration - Custom dhikr: user enters text + optional target - Each type tracks count independently, persists across restart - Swipe horizontally to switch active counter group |
+| P0-4 | **Data Persistence**: As a user, my counts must NEVER be lost unexpectedly | - Counts survive force quit, restart, backgrounding, battery death - Local Hive storage (no cloud required) - Key research signal: iQibla's #2 complaint was "battery dies, count lost" |
+| P0-5 | **Daily Dhikr Log**: As a user, I want my daily dhikr counts saved automatically so I can see my history | - Auto-save every session to local (cloud opt-in only) - Daily total across all dhikr types - Calendar view showing dhikr days (green) vs missed days - Weekly/monthly summary |
+| P0-6 | **Streak Tracking with Mercy Day**: As a user, I want to see my current streak so I stay motivated — without Duolingo-style guilt | - Current streak count displayed on home screen - Longest streak record - Streak milestones: 7, 30, 100, 365 days - **1 mercy day per week** (free freeze; missing one day doesn't break streak) - Streak resets if no dhikr + mercy day burned, by midnight local time |
+| P0-7 | **Zero Ads (Forever)**: As a user, I must never see ads inside Zikr Vibe — not even "halal" ads | - No ad SDK included in dependencies - No ad framework, not even ad-ready code paths - Research signal: "half-naked women during dhikr" is the nuclear pain point across all competitors |
+| P0-8 | **Zero Data Collection (by default)**: As a user, my dhikr must never be tracked, sold, or shared | - No analytics SDK on prayer content - No tracking of dhikr types/counts to any server - Optional anonymous crash reporting only (Crashlytics with explicit consent at first launch) - Research signal: Muslim Pro sold location data to US military — this scandal still haunts the market |
+| P0-9 | **Create Companion Circle**: As a user, I want to create a private dhikr circle with friends/family | - Create circle with name + optional description - Creator is admin, max **10 members per circle** (intimate, not broadcast) - User can be in up to 5 circles - See Section 8 for full circle design |
+| P0-10 | **Invite to Circle**: As a user, I want to invite friends via WhatsApp/SMS link so they join my circle | - Generate shareable invite link - Pre-written WhatsApp message: "Join my dhikr circle on Zikr Vibe — [link]" - Link opens app (if installed) or App Store/Play Store (if not) - Invited user auto-joins circle on first login |
+| P0-11 | **Companionship Board (not Leaderboard)**: As a circle member, I want to see who did dhikr today — not how much, just presence | - Binary check-in: ✓ (did dhikr today) or "last active: yesterday/3 days ago" — **no counts, no ranking, no competition** - Only your OWN streak shown privately (never others') - Gentle nudge: if a member hasn't done dhikr by evening, option to send a private "thinking of you" tap - Weekly view: calendar grid showing who was active which days - **Design rationale**: ibadah is between you and Allah. Public counting is riya'. Companionship = "I know you're on this path too", not "I did more than you" |
+| P0-12 | **Prayer Times**: As a Muslim, I want to see today's 5 prayer times based on my location | - Auto-detect location (GPS, opt-in) - Show Fajr, Dhuhr, Asr, Maghrib, Isha times - Calculation method selector (Umm al-Qura, ISNA, Muslim World League, etc.) - Next prayer countdown |
+| P0-13 | **Prayer Notifications**: As a user, I want push notifications before each prayer so I don't miss | - **OFF by default** (opt-in only) - Configurable: X minutes before each prayer - Per-prayer toggle (enable/disable individually) - Notification sound options (clean adhan clip or silent — never haram interruption) - Respects Do Not Disturb |
+| P0-14 | **Auth + Profile (optional)**: As a user, I want to sign up and sync across devices — but the app must also work without an account | - Sign up with Apple / Google / Email (optional; skip allowed) - App fully usable offline without login - If logged in: display name + optional avatar, circles sync via backend - If not logged in: all data stays on device |
+| P0-15 | **Qibla Compass**: As a user, I want to see the direction of Mecca from my current location | - Uses device compass + GPS - Arrow pointing to Kaaba - Distance to Mecca displayed - Accuracy indicator + calibration prompt |
 
 ### P1 — Should Have (v1.1, weeks 7-10)
 
 | # | User Story | Acceptance Criteria |
 |---|-----------|-------------------|
 | P1-1 | **Streak Milestone Cards**: As a user, I want to share my streak (not count) as a beautiful card on WhatsApp/IG | - Auto-generated card at streak milestones (7/30/100/365 consecutive days) - **Shows streak days only, NOT dhikr counts** (respects riya' concern) - Message: "I remembered Allah for 30 days straight" not "I did 99,000 dhikr" - Islamic geometric design aesthetic - One-tap share to WhatsApp/IG Stories - Subtle Zikr Vibe branding + download CTA |
-| P1-2 | **Group Invitation Cards**: As a group creator, I want a beautiful invite card to bring friends into my dhikr circle | - "Join our dhikr circle on Zikr Vibe" - Shows group name + member count - Does NOT show any individual stats - Pre-written WhatsApp message with deep link |
-| P1-3 | **Arabic UI**: As an Arabic-speaking user, I want the app in Arabic with RTL layout | - Full Arabic translation - RTL layout support - Arabic numerals option |
-| P1-4 | **Invite Landing Page**: As an invited user, I want to see what this dhikr circle is about before downloading | - Web page showing group name + member count + "X members remembered Allah today" - Privacy-first messaging: "Your data stays on your device" - "Download to Join" CTA with App Store / Play Store links - Deep link passes group invite code through install |
+| P1-2 | **Circle Invitation Cards**: As a circle creator, I want a beautiful invite card to bring friends into my dhikr circle | - "Join our dhikr circle on Zikr Vibe" - Shows circle name + member count - Does NOT show any individual stats - Pre-written WhatsApp message with deep link |
+| P1-3 | **Arabic UI**: As an Arabic-speaking user, I want the app in Arabic with RTL layout | - Full Arabic translation - RTL layout support - Arabic numerals option - Auto-detect system language (en/ar) |
+| P1-4 | **Invite Landing Page**: As an invited user, I want to see what this dhikr circle is about before downloading | - Web page showing circle name + member count + "X members remembered Allah today" - Privacy-first messaging: "Your data stays on your device" - "Download to Join" CTA with App Store / Play Store links - Deep link passes circle invite code through install |
 | P1-5 | **Dhikr Audio**: As a user, I want optional audio for each dhikr type so I can follow along | - Audio pronunciation for each preset dhikr - Play/pause control - Auto-advance option (plays next dhikr after target hit) |
-| P1-6 | **Ramadan Mode**: As a user, I want a special Ramadan experience with daily goals and Taraweeh tracking | - Ramadan calendar with daily dhikr goals - Taraweeh prayer tracker - Ramadan-specific milestone cards - Auto-activates during Ramadan dates |
+| P1-6 | **Dark Mode**: As a user, I want a beautiful dark mode — competitor complaint was "night mode didn't work properly" | - Proper OLED black option - Preserves gold accents - Auto-switch with system |
+| P1-7 | **Ramadan Mode**: As a user, I want a special Ramadan experience with daily goals and Taraweeh tracking | - Ramadan calendar with daily dhikr goals - Taraweeh prayer tracker - Ramadan-specific milestone cards - Auto-activates during Ramadan dates |
 
 ### P2 — Nice to Have / Future (v2.0+)
 
 | # | User Story | Acceptance Criteria |
 |---|-----------|-------------------|
 | P2-1 | **Hardware Ring Integration** | Connect Zikr Vibe ring (if SDK becomes available) for automatic dhikr counting |
-| P2-2 | **Premium Tier** | Ad-free, advanced analytics, unlimited groups, custom group themes. $2.99/mo or $19.99/yr |
-| P2-3 | **Imam/Leader Mode** | Group admin can set weekly dhikr goals, send encouragement messages, pin announcements |
-| P2-4 | **Wrist Widget** | Apple Watch / Wear OS complication for quick dhikr counting |
-| P2-5 | **Offline Mode** | Full dhikr counting works offline, syncs when reconnected |
-| P2-6 | **Family Groups** | Parent-child groups with simplified UI for kids |
-| P2-7 | **Mosque Directory** | Find nearby mosques with group join suggestions |
-| P2-8 | **Dhikr Insights** | Weekly summary: "You did 2,340 dhikr this week, 15% more than last week" (data presentation, not judgment) |
+| P2-2 | **Premium Tier** | **Ad-free stays free forever.** Premium = custom themes (skins), advanced calendar, cloud backup. $1.99/mo or $14.99/yr. Never a paywall on core functionality |
+| P2-3 | **Imam/Leader Mode** | Circle admin can set weekly dhikr goals, send encouragement messages (not shaming), pin announcements |
+| P2-4 | **Apple Watch / Wear OS** | Complication for quick dhikr counting (real user request) |
+| P2-5 | **Gentle Nudge Notifications** | "You haven't opened Zikr Vibe today" — but ONLY if user opts in, and max 1 per day |
+| P2-6 | **Offline Mode (full)** | All features work offline, syncs when reconnected |
+| P2-7 | **Family Groups** | Parent-child circles with simplified UI for kids |
+| P2-8 | **Mosque Directory** | Find nearby mosques (opt-in location) |
+| P2-9 | **Dhikr Insights** | Weekly summary: "You remembered Allah 5 of 7 days this week" (presence framing, never volume scoring) |
+
+### Explicitly NOT Doing (ever)
+
+| Feature | Why not |
+|---------|---------|
+| **Leaderboards / rankings** | Riya' (showing off) — core users would leave |
+| **Public count sharing** | Ibadah is private. Only binary days/streaks can be shared |
+| **AI dhikr insights / interpretation** | Muslim community rejects AI in religion |
+| **In-app purchases on core counter** | Feels extractive in a worship context — skins only, never counting limits |
+| **Subscription paywall on counting** | Users traumatized by Muslim Pro traps — core stays free forever |
+| **Any form of advertising** | The #1 reason every competitor gets 1-star reviews |
+| **Streak-shame mechanics** | No aggressive loss-aversion notifications. Duolingo guilt has no place in worship |
 
 ---
 
-## 6. Solution Overview
+## 7. Solution Overview
 
 ### Architecture
 
 ```
 ┌─────────────────────────────────────┐
 │          MOBILE APP                  │
-│    (React Native or Flutter)         │
+│           (Flutter)                  │
 │                                      │
 │  ┌──────────┐  ┌──────────────────┐ │
 │  │  Dhikr   │  │  Companionship   │ │
-│  │  Counter  │  │  Groups (binary) │ │
+│  │  Counter  │  │  Circles (✓/✗)   │ │
 │  └──────────┘  └──────────────────┘ │
 │  ┌──────────┐  ┌──────────────────┐ │
 │  │  Prayer  │  │  Streak Tracker  │ │
-│  │  Times   │  │  + Milestones    │ │
+│  │  Times   │  │  + Mercy Day     │ │
 │  └──────────┘  └──────────────────┘ │
 │  ┌──────────┐  ┌──────────────────┐ │
 │  │  Qibla   │  │  Profile +       │ │
-│  │  Compass  │  │  Auth            │ │
+│  │  Compass  │  │  Optional Auth   │ │
 │  └──────────┘  └──────────────────┘ │
 └──────────────────┬──────────────────┘
-                   │ API
+                   │ API (circles only)
 ┌──────────────────▼──────────────────┐
 │           BACKEND                    │
-│         (Supabase)                   │
+│         (Supabase — minimal)         │
 │                                      │
-│  Auth (Apple/Google/Email)           │
-│  PostgreSQL (users, groups, dhikr)   │
-│  Realtime (leaderboard updates)      │
-│  Edge Functions (invite links,       │
-│    prayer time calc, milestones)     │
-│  Storage (avatar images,             │
-│    milestone card generation)        │
+│  Auth (Apple/Google/Email, optional) │
+│  PostgreSQL: circles, members,       │
+│    daily_presence (no counts!)       │
+│  Realtime (presence sync only)       │
+│  Edge Functions (invite links)       │
+│                                      │
+│  NO dhikr data ever touches server   │
 └──────────────────────────────────────┘
 ```
 
@@ -222,12 +265,13 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Framework | **Flutter** | Single codebase for iOS + Android. Faster than React Native for UI-heavy apps. Claude can generate Dart |
-| Backend | **Supabase** | Already used for Soul Alchemy. Auth, DB, Realtime, Edge Functions in one platform. Free tier generous |
-| Prayer time calc | **Adhan library** (open source) | Well-maintained, supports all calculation methods. Don't reinvent |
-| Qibla | **Device compass + GPS** | Standard sensor APIs, no external dependency |
-| Deep linking | **Firebase Dynamic Links** or **Branch.io** | Critical for invite flow (WhatsApp → App Store → auto-join group) |
-| Push notifications | **Firebase Cloud Messaging** | Cross-platform, free, reliable |
-| Milestone cards | **Server-side image generation** | Supabase Edge Function generates PNG → app shares to WhatsApp/IG |
+| Backend | **Supabase** (minimal) | Auth, DB, Realtime, Edge Functions. **Only for circles (presence), never for dhikr counts** |
+| Local storage | **Hive** | Crash-safe, offline-first, counts persist across battery death |
+| Prayer time calc | **adhan_dart** (open source) | Offline, 12 calculation methods, Qibla bearing included |
+| Qibla | **flutter_qiblah** + device compass + GPS | Standard sensor APIs |
+| Deep linking | **app_links** (Universal Links / App Links) | Firebase Dynamic Links deprecated; self-hosted zikrvibe.com/join/CODE |
+| Push notifications | **flutter_local_notifications** for prayer times (server-free); FCM only if needed for circles | Local-first, no server dependency for core notifications |
+| Haptics | Built-in `HapticFeedback` + `haptic_feedback` package | Light per tap, heavy at 33/66/99 |
 
 ### App Navigation (4 tabs)
 
@@ -266,55 +310,201 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 4. **Respect prayer** — No intrusive UI during active dhikr. Minimal chrome, maximum counting space
 5. **WhatsApp-native sharing** — Every shareable action optimized for WhatsApp (Gulf primary messaging app)
 6. **Zero ads, forever** — Research: haram ads during dhikr is the #1 reason for 1-star reviews across all competitors. This is non-negotiable.
-7. **Privacy by default** — All dhikr data stored locally (Hive). Cloud sync is opt-in for groups only. No analytics on prayer content. No third-party data sharing. Period.
+7. **Privacy by default** — All dhikr data stored locally (Hive). Cloud sync is opt-in for circles only. No analytics on prayer content. No third-party data sharing. Period.
 8. **Companionship over competition** — Group features show presence (✓ did dhikr today), never volume. Ibadah is between you and Allah.
 
 ---
 
-## 7. Open Questions
+## 8. Companion Circles: Redesigned
 
-| # | Question | Owner | Deadline | Status |
-|---|----------|-------|----------|--------|
-| 1 | Flutter vs React Native — Claude's strongest framework? | Claude | Week 1 | **Decision: Flutter** (in Tech Architecture doc) |
-| 2 | Supabase free tier limits for 10K users? | Claude | Week 1 | Open |
-| 3 | App Store review: will Apple flag prayer notifications as "spam"? | Yun | Week 2 | Open |
-| 4 | Deep link strategy: how to pass group invite through App Store install? | Claude | Week 2 | Open |
-| 5 | Prayer time calculation: which method as default for Gulf? (Umm al-Qura for KSA, Dubai for UAE) | Yun | Week 1 | Open |
-| 6 | ~~Leaderboard ranking: consistency vs volume?~~ | — | — | **Resolved: No leaderboard. Binary check-in only (did dhikr today ✓). Research killed ranking.** |
-| 7 | Gender-separated groups: required for v1.0 or v1.1? | Yun | Week 1 | Open |
-| 8 | App Store listing: Arabic or English name? | — | — | **Resolved: "Zikr Vibe: Tasbih Counter" (English). ASO research shows English title + Arabic keywords in metadata.** |
-| 9 | Apple Watch complication: include in v1.0? (Flutter support limited) | Claude | Week 1 | **Decision: P2. Not MVP.** |
-| 10 | Monetization timing: when to introduce premium tier? | Yun | Month 3 | Open |
+### Old Design (v1 — invalidated by research)
+- Group leaderboard ranked by consistency
+- Public count comparison
+- Competition-driven ("who's most consistent?")
+- Viral loop thesis: invite → compete → invite more
+
+### New Design (research-informed)
+
+**Concept: "Dhikr Circle" — silent companionship, not competition**
+
+**What you see:**
+```
+┌──────────────────────────┐
+│  Family Circle            │
+│  ─────────────────────── │
+│  Ahmad      ✓ today      │
+│  Khalid     ✓ today      │
+│  Fatima     · yesterday   │
+│  Yusuf      ✓ today      │
+│  ─────────────────────── │
+│  3 of 4 remembered today │
+└──────────────────────────┘
+```
+
+**What you DON'T see:**
+- How many each person counted (private — always)
+- Rankings or comparisons
+- Streaks of other people (your own streak is private)
+- Any judgmental framing
+
+**Rules:**
+- Max 10 members per circle (intimate, not broadcast)
+- Only shows: name + "did dhikr today" (✓) or "last active: yesterday / 3 days ago"
+- No numbers, no counts, no streaks of others — only your own
+- Circle creator can send one gentle text reminder per day (manual, not automated)
+- Leave anytime, no friction
+
+**Why this works:**
+1. **Accountability without shame** — you know your family is praying, they know you are. Nobody's graded.
+2. **The "empty chair" effect** — seeing "Fatima: yesterday" is a gentle nudge, not a judgment. She might open the app because she wants to show up, not because she's ranked last.
+3. **Still viral, but slower** — "Join our family's dhikr circle" is a more natural invite than "Compete with me on dhikr." Lower K-factor, but higher quality users who retain.
+4. **Respects riya' concern** — no count sharing, no public performance.
+
+### Precedents validating this approach
+- **Duolingo Friend Streak** — binary "did your friend study today?" drives **+22% daily completion** on retained users. No count comparison, just presence.
+- **Cohorty** — "quiet accountability, support without noise, presence without pressure"
+- **I Am Sober** — peer matching by milestone, not ranking; non-judgmental reset on relapse
+- **BeReal** — pure binary "did you post today?" drove 53M downloads (cautionary tail: binary without deeper value struggles long-term — our deeper value is spiritual meaning)
 
 ---
 
-## 8. Timeline & Phasing
+## 9. Privacy Architecture
+
+Privacy is a core differentiator, not an afterthought.
+
+### What we collect
+
+- **Device-local only**: counter data, circle presence (✓/✗), settings
+- **If user creates account** (optional): email (for circle invites), display name. Nothing else.
+- **Never**: dhikr type, count, frequency, location, prayer times, phone model, IP logging
+
+### What we DON'T do
+
+- No analytics SDK (Firebase Analytics removed from v1.0 deps)
+- No ad SDK
+- No tracking pixels
+- No data sharing with any third party
+- No cloud backup by default (opt-in only, user-controlled)
+- Crash reporting: anonymous, opt-in only (Firebase Crashlytics with explicit consent at first launch)
+
+### Privacy page copy (in-app)
+
+> **Your dhikr is between you and Allah.**
+>
+> Zikr Vibe stores your counter data on your device only. We don't collect, track, or sell your prayer data — not to advertisers, not to data brokers, not to anyone. We don't even know what dhikr you do.
+>
+> If you join a Dhikr Circle, other members can only see that you did dhikr today. They cannot see what you counted, how much, or when. You control what's shared.
+
+### App Store / Play Store description includes
+
+> "No ads. No data collection. No subscription traps. Your worship, your phone, your privacy."
+
+### Database schema (circles only — minimal)
+
+```sql
+-- Companion circles
+CREATE TABLE circles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  admin_id UUID REFERENCES auth.users(id),
+  invite_code TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Circle members
+CREATE TABLE circle_members (
+  circle_id UUID REFERENCES circles(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (circle_id, user_id)
+);
+
+-- Daily presence (NOT dhikr data — just "showed up today")
+CREATE TABLE daily_presence (
+  user_id UUID REFERENCES auth.users(id),
+  circle_id UUID REFERENCES circles(id),
+  date DATE NOT NULL,
+  PRIMARY KEY (user_id, circle_id, date)
+);
+-- No count column. No dhikr_type column. Just presence.
+```
+
+---
+
+## 10. Positioning Statement
+
+### Primary line (App Store + marketing)
+
+> **"Count your dhikr. Nothing else watches."**
+
+**Subline**: *No ads. No data selling. No broken hardware. Just you and your remembrance.*
+
+### Per-competitor positioning
+
+| Against | Positioning |
+|---------|------------|
+| Muslim Pro | "They sold your location to the US military. We don't even know your location." |
+| iQibla | "Their ring breaks. Our app doesn't." |
+| Tasbeeh counter apps | "They show you gambling ads during dhikr. We show you nothing but your count." |
+| Pillars | "They do prayer tracking. We do dhikr counting. Both ad-free, different focus — complementary." |
+
+### Three promises (in-app onboarding)
+
+1. **Your dhikr is private.** No data collection. No cloud requirement. No analytics on what you pray. Local-first, always.
+2. **Your worship is sacred.** No ads — not ever, not even "halal" ads. No gamification. No scores. No judgment. We present your count. You decide what it means.
+3. **Your tool is reliable.** Count never resets unexpectedly. Works offline. Battery won't kill your progress. The app does one thing and does it without breaking.
+
+---
+
+## 11. Open Questions
+
+| # | Question | Owner | Status |
+|---|----------|-------|--------|
+| 1 | Flutter vs React Native | — | **Resolved: Flutter** (Tech Architecture doc) |
+| 2 | Supabase free tier limits for 10K users? | Claude | Open |
+| 3 | App Store review: will Apple flag prayer notifications as "spam"? | Yun | Open |
+| 4 | Deep link strategy: pass circle invite through App Store install (deferred deep linking)? | Claude | Open |
+| 5 | Prayer time calculation: default for Gulf? (Umm al-Qura KSA, Dubai UAE) | Yun | Open |
+| 6 | ~~Leaderboard ranking: consistency vs volume?~~ | — | **Resolved: No leaderboard. Binary check-in only.** |
+| 7 | Gender-separated circles: v1.0 or v1.1? | Yun | Open |
+| 8 | App Store listing: Arabic or English name? | — | **Resolved: "Zikr Vibe: Tasbih Counter" (EN title + AR keywords in metadata)** |
+| 9 | Apple Watch complication: v1.0 or P2? | — | **Resolved: P2, not MVP** |
+| 10 | Monetization timing: when to introduce premium skins tier? | Yun | Open — target Month 3 |
+| 11 | Circle presence: show "last active: 3 days ago" or just "today/not today"? | Yun | Open — too much info may feel surveillance-like |
+| 12 | Privacy page: in-app or link to web? | Claude | Open (Apple requires privacy policy link) |
+| 13 | Crash reporting consent: first launch or buried in settings? | Claude | Open — balance data quality vs trust |
+| 14 | App name in Arabic markets: "Zikr Vibe" or "ذكر" or both? | Yun | Open — store listing optimization |
+| 15 | Explicitly mention Muslim Pro scandal in marketing? | Yun | Open — risky but powerful ("we don't sell your data" implies someone does) |
+
+---
+
+## 12. Timeline & Phasing
 
 ### Phase 1: MVP (Weeks 1-6)
 
 | Week | Focus | Deliverables |
 |------|-------|-------------|
-| **1** | Setup + Core Counter | Flutter project setup, Supabase backend, Auth (Apple/Google/Email), Dhikr counter screen (tap, haptic, presets, multiple types) |
-| **2** | Data + Streaks | Daily dhikr log, calendar view, streak calculation, home screen streak display, profile screen |
-| **3** | Groups + Ranking | Create group, invite link generation, group leaderboard, join flow, WhatsApp share |
-| **4** | Prayer + Qibla | Prayer time calculation, push notifications, Qibla compass, prayer times screen |
-| **5** | Polish + Invite Flow | UI polish (Islamic aesthetic), deep linking for invites, onboarding flow, invite landing page |
-| **6** | Test + Submit | Bug fixes, performance, App Store + Play Store submission, screenshots, listing copy |
+| **1** | Setup + Core Counter | Flutter project setup, Supabase backend (minimal), optional auth (Apple/Google/Email + skip), Dhikr counter screen (tap, haptic, 33/66/99 milestone, presets, multiple types) |
+| **2** | Streak + Calendar | Daily dhikr log, calendar view, streak calculation with mercy day, home screen streak display, profile screen |
+| **3** | Companion Circles (presence, not ranking) | Create circle, invite link generation, **binary check-in board**, gentle nudge, WhatsApp share |
+| **4** | Prayer + Qibla | Prayer time calculation (adhan_dart), local notifications (opt-in, off by default), Qibla compass, privacy consent dialog |
+| **5** | Polish + Invite Flow | UI polish (Islamic aesthetic, skins), deep linking for invites, onboarding flow with 3 privacy promises, invite landing page |
+| **6** | Test + Submit | Bug fixes, performance, privacy-focused App Store listing, screenshots, listing copy, submit |
 
 ### Phase 2: Growth Features (Weeks 7-10)
 
-- Milestone sharing cards (Islamic design)
-- Group milestones
+- Streak milestone sharing cards (days only, never counts)
 - Arabic UI + RTL
+- Dark mode polish
 - Ramadan mode
 - Dhikr audio
 
 ### Phase 3: Scale (Months 3-6)
 
-- Premium tier ($2.99/mo)
+- Premium skins tier ($1.99/mo or $14.99/yr) — ad-free stays free forever
 - Imam/Leader mode
-- Apple Watch
-- Advanced analytics
+- Apple Watch complication
+- Advanced calendar analytics
 - Hardware ring integration (if SDK available)
 
 ### Dependencies
@@ -322,10 +512,26 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 | Dependency | Status | Blocker? |
 |------------|--------|----------|
 | Apple Developer Account | Yun has it | No |
-| Google Play Developer Account | Needed ($25 one-time) | Minor |
-| Supabase project | Create new (separate from Soul Alchemy) | No |
+| Google Play Developer Account | Registered | No |
+| Supabase project | Live with schema deployed | No |
 | App Store review (1-3 days) | Submit end of Week 6 | Possible delay |
 | Islamic design assets (patterns, calligraphy) | Claude generates or open source | No |
+
+---
+
+## 13. Tech Changes from v1 (reference log)
+
+These deltas are already applied in the codebase; documenting here for new contributors:
+
+| Change | Reason |
+|--------|--------|
+| **Remove Firebase Analytics** | Privacy promise — no tracking of prayer content |
+| **Remove Firebase Dynamic Links** | Service deprecated. Use `app_links` (Universal Links / App Links) + self-hosted zikrvibe.com/join/CODE |
+| **Keep Firebase Crashlytics** | Opt-in only, with explicit consent dialog at first launch |
+| **Keep Firebase Cloud Messaging** | For prayer time notifications only (opt-in), may be replaced by purely local notifications |
+| **Supabase: minimal** | Only for companion circles (presence sync). No dhikr data touches the server |
+| **Circle data model: presence only** | Server stores: user_id, circle_id, date, did_dhikr (boolean). That's it. No counts, no dhikr types. |
+| **Local-first architecture** | Hive is the source of truth. Cloud is opt-in mirror for circles only |
 
 ---
 
@@ -370,11 +576,13 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 | Need | Evidence | Status |
 |------|----------|--------|
 | Distraction-free counting | "I pick up my phone to count and end up on Instagram" | ✅ P0-1 |
-| Zero ads, especially no haram ads | Almost every 1-star review across all competitors | ✅ Design Principle #6 |
+| Zero ads, especially no haram ads | Almost every 1-star review across all competitors | ✅ P0-7, Design Principle #6 |
 | 33/66/99 haptic milestones | "I want to close my eyes and feel the count" | ✅ P0-1 |
-| Data sovereignty / no selling to military | Muslim Pro scandal still haunts the market | ✅ Design Principle #7 |
-| Persistent counts (don't lose on crash/battery) | iQibla battery death = counts gone | ✅ Hive local storage |
+| Data sovereignty / no selling to military | Muslim Pro scandal still haunts the market | ✅ P0-8, Design Principle #7, Section 9 |
+| Persistent counts (don't lose on crash/battery) | iQibla battery death = counts gone | ✅ P0-4, Hive local storage |
 | 33-bead progress visualization | Round-of-tasbih rhythm | ✅ P0-1 |
+| Mercy day on streak | Duolingo guilt has no place in worship | ✅ P0-6 |
+| Calendar view | "One thing to make it 5 stars is having a calendar" (direct quote) | ✅ P0-5 |
 
 ### False Needs (sound good but don't work)
 | Need | Why It's False |
@@ -383,6 +591,7 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 | AI religious insights | Muslim community deeply skeptical of AI interpreting religion |
 | Quran reading | 100+ apps do this well already |
 | Period tracking | Not a dhikr counter's job |
+| Subscription on core | Users traumatized by Muslim Pro traps |
 
 ## Appendix D: ASO Keywords
 
@@ -394,6 +603,8 @@ Zikr Vibe App is a **pivot from hardware-first to software-first**:
 **Tier 1 keywords** (9M+ installs validate demand): tasbih, dhikr, tasbih counter, dhikr counter
 **Seasonal**: Update title to include "Ramadan" during Ramadan month (+126% installs in UAE)
 
+See full ASO listing: `docs/Zikr-Vibe-ASO-Listing.md`
+
 ---
 
-*"The best growth engine isn't an ad. It's a friend saying: I remembered Allah today. Join me."*
+*"Count your dhikr. Nothing else watches."*

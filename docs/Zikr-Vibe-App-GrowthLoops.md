@@ -1,303 +1,357 @@
-# Growth Loops: Zikr Vibe App (Pure Software)
+# Growth Loops: Zikr Vibe App (Canonical)
 
-**Date**: 2026-04-02
+**Date**: 2026-04-02 (canonical) — merged 2026-04-24
+**Status**: Canonical (supersedes GrowthLoops-v2)
 **Confidential — Internal Use Only**
 
-This replaces the hardware-version growth loops. No ring required = zero-friction acquisition.
+**Thesis**: *We don't grow by being the most viral. We grow by being the most trusted.*
 
 ---
 
-## The Game Has Changed
+## What Changed (Research Delta)
 
-| | Hardware Ring | Pure App |
+| v1 Assumption (invalidated) | Canonical Reality |
+|---|---|
+| Group ranking = viral loop | Devout Muslims see count-sharing as riya' (showing off) |
+| K-factor 2.4 (free app + competitive invite) | K-factor ~0.5 but users are higher quality and permanent |
+| Growth = invitation to compete | Growth = invitation to be present together |
+| Leaderboard is the hook | **Privacy is the hook** |
+| "Empty Throne" UI showing ranked seats | Dropped — ranked seats contradict companionship |
+
+The old growth model was exciting (exponential, K=2.4, 50K in 6 months). The new model is honest (steady organic, K=0.5, 12K in 6 months). But **every canonical-model user stays**. They tell their imam. They tell their family. They leave 5-star reviews. They never churn because the app is free, ad-free, and does what it says.
+
+The Muslim app market doesn't need another viral trick. It needs one app that doesn't lie.
+
+---
+
+## The Game vs Hardware
+
+| | Hardware Ring | **Free App** |
 |---|---|---|
 | Acquisition cost | $39 purchase barrier | Free download |
-| K-factor ceiling | ~0.5 (friend must spend $39) | **~1.5+ (friend just taps "install")** |
 | Time to join | 7-14 day shipping + setup | **30 seconds** |
 | Invite friction | "Buy this $39 ring" | **"Download this free app"** |
-| Viral potential | Sub-viral | **Genuinely viral** |
+| Growth type | Linear (paid) | **Organic (trust + circles)** |
+| Users at 6 months | 500-1,000 | **~12,000 (canonical)** |
+| Cost to operate | $90/day ads + COGS | **$25/mo infra** |
+| Path to 1M users | Never (hardware can't scale) | **24-36 months organic** |
 
-**Free app + WhatsApp invite + group ranking = the viral coefficient can exceed 1.0.** This is a fundamentally different growth game.
-
----
-
-## Loop Rankings (App Version)
-
-| Loop | Fit | K-Factor Potential | Priority |
-|------|-----|--------------------|----------|
-| **Mosque Loop** (Group Invite) | ★★★★★ | 1.0-2.0 | **PRIMARY** |
-| **Streak Loop** (Milestone Sharing) | ★★★★ | 0.3-0.5 | **SECONDARY** |
-| **Seasonal Loop** (Ramadan Surge) | ★★★★ | 2.0-5.0 (burst) | **TERTIARY** |
-| **Referral Loop** (Incentivized) | ★★★ | 0.3-0.5 | **LAYER LATER** |
-| UGC Loop | ★★ | 0.1-0.2 | Skip for now |
+The app gives up short-term revenue for long-term trust. At 500K users (year 2-3), even 2% premium skins conversion ($1.99/mo) = $19,900/mo recurring.
 
 ---
 
-## 🔴 PRIMARY: The Mosque Loop (Zero-Friction Version)
+## Loop Rankings (Canonical)
 
-### Flow
-
-```
-┌─────────────────────────────────────────────────┐
-│               THE MOSQUE LOOP (APP)              │
-│                                                   │
-│  1. USER downloads Zikr Vibe (free)              │
-│          ↓                                        │
-│  2. Does dhikr for a few days, likes it          │
-│          ↓                                        │
-│  3. Creates GROUP, invites 5 mosque friends       │
-│     via WhatsApp: "Join my dhikr circle"         │
-│          ↓                                        │
-│  4. FRIENDS tap link → App Store → Install        │
-│     (30 seconds, FREE, zero friction)            │
-│          ↓                                        │
-│  5. FRIENDS auto-join group, see leaderboard     │
-│     "Wait, Ahmad has a 14-day streak??"          │
-│          ↓                                        │
-│  6. FRIENDS invite THEIR mosque friends           │
-│          ↓                                        │
-│  ↺ Each user generates 1-3 new installs          │
-└─────────────────────────────────────────────────┘
-```
-
-### K-Factor Math (No Purchase Barrier)
-
-| Variable | Hardware Ring | **Free App** |
-|----------|-------------|-------------|
-| Invites sent per user | 5 | **8** (no guilt about asking friends to spend money) |
-| Accept rate (click link) | 40% | **60%** ("it's free, just download it") |
-| Convert to install | 25% | **50%** (free = no objection) |
-| **K-factor** | **0.5** | **2.4** |
-
-K = 2.4 means **each user generates 2.4 new users on average**. That's genuinely viral. Even if real-world numbers are half this optimistic (K = 1.2), it still means exponential growth.
-
-### Critical Path (same as hardware version but faster)
-
-1. **Deep linking MUST work** — WhatsApp → App Store → Install → Auto-join group
-2. **Locked leaderboard preview** — Invite landing page shows blurred ranking + "Download to join"
-3. **Onboarding → Group** — New user from invite goes straight to group after 3-screen onboarding
-
-### Engagement Hook: "Empty Throne"
-
-When a user opens the group leaderboard, show:
-```
-┌──────────────────────────┐
-│  Ahmad's Dhikr Circle    │
-│  ─────────────────────── │
-│  1. Ahmad     ████  98%  │
-│  2. Khalid    ███   85%  │
-│  3. [Invite]  ➕ Add     │
-│  4. [Invite]  ➕ Add     │
-│  5. [Invite]  ➕ Add     │
-│  ─────────────────────── │
-│  "3 empty seats.         │
-│   Who's joining?"        │
-└──────────────────────────┘
-```
-
-Empty rows with "➕ Add" are more powerful than an "Invite" button. They create visible social proof of incompleteness.
+| Loop | Fit | K-Factor | Priority |
+|------|-----|----------|----------|
+| **Trust Loop** (word-of-mouth via product integrity) | ★★★★★ | 0.3-0.5, never decays | **PRIMARY** |
+| **Circle Loop** (companion circle invite) | ★★★★ | 0.5-1.0 per creator | **SECONDARY** |
+| **Ramadan Surge** (seasonal amplifier) | ★★★★ | 2-3× boost on all loops | **TERTIARY** |
+| **App Store Loop** (rating → organic discovery) | ★★★★ | Compounds over time | **QUATERNARY** |
+| Influencer marketing | ★★ | Inauthentic for worship tool | Skip |
+| Paid ads | ★ | Contradicts privacy positioning | Skip |
+| Referral rewards (invite 5 unlock theme) | ★ | Cheapens worship | **Never** |
 
 ---
 
-## 🟡 SECONDARY: The Streak Loop (Milestone Sharing)
+## 🔴 PRIMARY: The Trust Loop
 
-### Flow
+The most powerful and most unusual growth loop — doesn't look like a loop at first.
 
 ```
-┌──────────────────────────────────────────────┐
-│              THE STREAK LOOP                  │
-│                                               │
-│  1. USER does dhikr daily for 7 days         │
-│          ↓                                    │
-│  2. APP celebrates: "7-day streak! 🔥"       │
-│     with shareable card (Islamic design)      │
-│          ↓                                    │
-│  3. USER shares to WhatsApp Status / IG Story│
-│          ↓                                    │
-│  4. 200 contacts see the card                │
-│          ↓                                    │
-│  5. 10-20 curious friends ask "what app?"    │
-│          ↓                                    │
-│  6. Card has QR code → App Store download    │
-│          ↓                                    │
-│  ↺ New users start their own streaks         │
-└──────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│              THE TRUST LOOP                  │
+│                                              │
+│  1. USER downloads Zikr Vibe                │
+│          ↓                                   │
+│  2. Uses it for a week. Notices:            │
+│     - Zero ads (not even once)              │
+│     - No "upgrade to premium" nags          │
+│     - No account required to count          │
+│     - No permission requests beyond basics  │
+│          ↓                                   │
+│  3. USER is surprised. Tells ONE friend:    │
+│     "I found a dhikr app that doesn't       │
+│      show me haram ads"                     │
+│          ↓                                   │
+│  4. FRIEND downloads (because Muslim Pro    │
+│     just showed them a dating ad)           │
+│          ↓                                   │
+│  5. FRIEND has same experience              │
+│          ↓                                   │
+│  6. FRIEND tells THEIR friend               │
+│          ↓                                   │
+│  ↺ Slower than viral, but permanent.        │
+│    Every user is an advocate, not just an   │
+│    inviter.                                 │
+└─────────────────────────────────────────────┘
 ```
 
-### Why This Works for Muslims Specifically
+### Why this works
+- Muslim community has been **burned** by Muslim Pro (data selling), tasbeeh apps (haram ads), iQibla (broken hardware)
+- Trust is scarce. An app that simply **doesn't betray you** becomes remarkable
+- Word-of-mouth in mosque communities is the strongest distribution channel on earth
+- One imam says "I use Zikr Vibe" and 200 people download it that Friday
 
-- **WhatsApp Status is the Gulf social media** — More intimate than Instagram, more visible than DMs
-- **Faith accomplishments are shareable without vanity** — "30 days of consistent dhikr" is a devotion flex, not a vanity flex. It's socially acceptable and even admirable to share
-- **Islamic aesthetic cards feel premium** — Not a screenshot, but a beautifully designed card with geometric patterns and calligraphy → feels worth sharing
-
-### Milestone Moments (Triggers)
-
-| Milestone | Message | Emotional Hook |
-|-----------|---------|---------------|
-| 7 days | "One week of devotion" | First achievement high |
-| 30 days | "30 days. Consistent. Disciplined." | Monthly pride |
-| 100 days | "100 days of remembrance. Alhamdulillah." | Rare, social proof |
-| 365 days | "One year. Every single day." | Ultimate |
-| 10,000 dhikr | "10,000 remembrances" | Count milestone |
-| 100,000 dhikr | "Your hands remember" | Life achievement |
-| First group created | "Started a circle of [X] friends" | Community builder |
-| Group hits 50K together | "Together: 50,000 dhikr" | Collective pride |
-
-### Card Design Principles
-- Vertical 9:16 (WhatsApp Status / IG Story format)
-- Islamic geometric border pattern
-- Arabic calligraphy header (relevant ayah or hadith)
-- User's stat prominently displayed
-- Subtle "Zikr Vibe" logo + QR code at bottom
-- Deep emerald + gold palette
-- Generated server-side (Supabase Edge Function) → served as PNG
+### K-factor estimate
+- 0.3-0.5 (each user tells 1-2 friends over months, not days)
+- But **never decays** — trust-based referrals don't stop
+- No ad spend needed. The product IS the marketing.
 
 ---
 
-## 🟢 TERTIARY: The Ramadan Loop (Seasonal Surge)
+## 🟡 SECONDARY: The Circle Loop
 
-### Why Ramadan Is a Growth Bomb
+Companion circles create gentle, natural invitations — not competitive ones.
+
+```
+┌─────────────────────────────────────────────┐
+│             THE CIRCLE LOOP                  │
+│                                              │
+│  1. USER creates "Family Circle"            │
+│          ↓                                   │
+│  2. Invites spouse + kids via WhatsApp      │
+│     "Let's do dhikr together this Ramadan"  │
+│          ↓                                   │
+│  3. FAMILY downloads, joins circle          │
+│          ↓                                   │
+│  4. Each morning, everyone sees:            │
+│     "Ahmad ✓  Fatima ✓  Yusuf ·"            │
+│     (Yusuf hasn't done dhikr yet)           │
+│          ↓                                   │
+│  5. Yusuf opens the app because he wants    │
+│     his ✓ to show up. Not because he's      │
+│     ranked last. Because he wants to be     │
+│     present with his family.                 │
+│          ↓                                   │
+│  6. Retention goes up for entire circle     │
+│          ↓                                   │
+│  7. Family creates SECOND circle:           │
+│     "Mosque friends" → more invites         │
+└─────────────────────────────────────────────┘
+```
+
+### Why presence > ranking
+- "Ahmad ✓ today" feels like **solidarity**
+- "Ahmad: #3, 45 dhikr" feels like **judgment**
+- Solidarity retains. Judgment churns.
+- See PRD Section 8 for full Dhikr Circle design
+
+### K-factor estimate
+- 0.5-1.0 per circle creator (invites 3-5 family, 60% install a free app)
+- Slower than competition-driven v1 model, but higher per-user retention
+
+### Critical path
+1. **Deep linking MUST work** — WhatsApp → App Store → Install → Auto-join circle
+2. **Invite landing page** — shows circle name + member count + "Your data stays on your device" (privacy-first)
+3. **Onboarding → Circle** — new user from invite goes straight to circle after 3-screen onboarding (3 privacy promises)
+
+---
+
+## 🟢 TERTIARY: The Ramadan Surge
+
+Ramadan amplifies all other loops. The canonical playbook uses **presence + days**, never counts.
+
+### Why Ramadan Is a Growth Moment
 
 - **30 days of increased prayer** — Every Muslim does more dhikr during Ramadan
 - **Community spirit peaks** — Group activities, mosque attendance, shared meals
-- **Gifting season** — "Share this app with your family for Ramadan"
+- **Gifting season** — "Download this app with your family for Ramadan"
 - **Taraweeh (night prayers)** — Extra prayer sessions = more dhikr counting need
-- **Social pressure** — "Everyone's doing it" is the strongest motivator
+- **Social visibility peaks** — WhatsApp Status full of Islamic content → organic reach
+- **Data**: MENA installs +28%, UAE +126%, Saudi +67% during Ramadan
 
 ### Ramadan Growth Strategy
 
 ```
 ┌──────────────────────────────────────────────────┐
-│              RAMADAN SURGE PLAN                    │
+│         RAMADAN SURGE PLAN (canonical)             │
 │                                                    │
 │  PRE-RAMADAN (2 weeks before):                    │
-│  - Push notification: "Ramadan starts in 14 days.│
-│    Set your dhikr goal."                          │
-│  - "Create a Ramadan group" special prompt        │
-│  - App Store featured: update keywords/listing    │
+│  - Local notification: "Ramadan starts in 14 days.│
+│    Invite your family to a Dhikr Circle."        │
+│  - "Create a Ramadan circle" special prompt       │
+│  - App Store listing update: add "Ramadan" to    │
+│    title, update screenshots                      │
 │                                                    │
 │  RAMADAN WEEK 1:                                  │
-│  - Daily dhikr goal tracker (overlay on counter)  │
-│  - "Ramadan leaderboard" (special 30-day ranking) │
+│  - Daily dhikr presence tracker (✓ per day)       │
+│  - Circle view: "Your family's Ramadan so far:   │
+│    Day 3 of 30" (no counts, no rankings)          │
 │  - Taraweeh counter mode                          │
-│  - Shareable "Day 1 of Ramadan" card              │
+│  - Shareable "Day 1 of Ramadan" card (days only)  │
 │                                                    │
 │  RAMADAN WEEK 2-3:                                │
-│  - "Your group's Ramadan progress" card           │
-│  - Mid-Ramadan milestone cards                    │
+│  - Circle view: "4 of 5 showed up yesterday"      │
+│  - Mid-Ramadan milestone card (consistency days)  │
 │  - "Invite family for the last 10 nights"         │
 │                                                    │
 │  RAMADAN WEEK 4 (Last 10 Nights):                 │
 │  - Special "Laylat al-Qadr" dhikr mode            │
-│  - Intensified counting UI                         │
-│  - "Final push" group notifications               │
+│  - Calm, reverent UI (no gamification pushes)     │
+│  - Circle presence visible (solidarity, not race) │
 │                                                    │
 │  EID:                                              │
-│  - "Ramadan complete!" mega-card                  │
-│  - "Your Ramadan in numbers" summary              │
-│  - Share → massive wave of installs               │
+│  - "Ramadan complete!" card: shows days present,  │
+│     not counts. "You showed up 28 of 30 days."   │
+│  - "Your Ramadan streak" summary                  │
+│  - Shareable → new-user install wave              │
 └──────────────────────────────────────────────────┘
 ```
 
-### Ramadan Numbers (Projection)
+### Ramadan Numbers (Conservative Projection)
 
-If app launches NOW and builds to 5,000 users by Ramadan 2027 (Feb 2027):
+If app has ~5,000 users by Ramadan 2027 (Feb 2027):
 
 | Metric | Pre-Ramadan | During Ramadan | Post-Ramadan |
 |--------|-----------|---------------|-------------|
-| DAU | 1,500 | **4,000** (2.7x) | 2,500 |
-| New installs/day | 50 | **300** (6x) | 100 |
-| Groups created/day | 5 | **30** (6x) | 10 |
-| Milestone cards shared/day | 20 | **200** (10x) | 50 |
+| DAU | 1,500 | **3,500** (2.3×) | 2,200 |
+| New installs/day | 40 | **200** (5×) | 80 |
+| Circles created/day | 4 | **20** (5×) | 8 |
+| Days-present cards shared/day | 15 | **100** (6×) | 40 |
 
-**Ramadan alone could 3x your user base in 30 days.** Plan for it, design for it, be ready.
+**Ramadan alone can 2-3× the user base in 30 days.** Design for it, prepare content ahead.
 
 ---
 
-## Loop Synergy (App Version)
+## 🔵 QUATERNARY: The App Store Loop
+
+The only loop that costs zero effort once the product is right.
+
+```
+┌─────────────────────────────────────────────┐
+│           THE APP STORE LOOP                 │
+│                                              │
+│  1. Maintain 4.8+ star rating               │
+│          ↓                                   │
+│  2. App Store algorithm favors us in        │
+│     "Islamic" and "tasbih counter" categories│
+│          ↓                                   │
+│  3. User searches "tasbeeh counter" or      │
+│     "dhikr app no ads"                      │
+│          ↓                                   │
+│  4. Sees Zikr Vibe at 4.8★ vs Muslim Pro   │
+│     at 2.9★ (Trustpilot) or iQibla at 3.5★ │
+│          ↓                                   │
+│  5. Downloads. Great experience.             │
+│          ↓                                   │
+│  6. Leaves 5-star review:                   │
+│     "Finally an app with no ads!"           │
+│          ↓                                   │
+│  ↺ Rating stays high. More organic traffic. │
+└─────────────────────────────────────────────┘
+```
+
+### How to trigger positive reviews
+- After 7th day of use, gentle prompt: "Enjoying Zikr Vibe? A review helps others find us."
+- **Never** prompt during dhikr session (sacred time)
+- **Never** prompt more than once per user
+- **Never** interrupt prayer time notification
+
+See `docs/Zikr-Vibe-ASO-Listing.md` for full ASO strategy.
+
+---
+
+## Loop Synergy
 
 ```
         ┌──────────────┐
         │  ASO / Reddit │ ← Seed (organic discovery)
-        │   / Word of   │
-        │    mouth      │
+        │   / WhatsApp  │
+        │ word-of-mouth │
         └──────┬───────┘
                ↓
     ┌──────────────────────┐
     │   USER installs app  │ (FREE — zero friction)
     └──────────┬───────────┘
                ↓
-    ┌──────────┼────────────────┐
-    ↓          ↓                ↓
-┌────────┐ ┌─────────┐  ┌──────────┐
-│ MOSQUE │ │ STREAK  │  │ RAMADAN  │
-│  LOOP  │ │  LOOP   │  │  LOOP    │
-│        │ │         │  │          │
-│Invites │ │ Shares  │  │ 30-day   │
-│friends │ │ mile-   │  │ surge    │
-│to group│ │ stone   │  │ all loops│
-│        │ │ card    │  │ amplified│
-└───┬────┘ └────┬────┘  └────┬─────┘
-    ↓           ↓            ↓
-┌────────┐ ┌─────────┐  ┌──────────┐
-│FRIENDS │ │CONTACTS │  │ EVERYONE │
-│install │ │see card,│  │ is more  │
-│(free!) │ │download │  │ active   │
-│join    │ │         │  │          │
-│group   │ │         │  │          │
-└───┬────┘ └────┬────┘  └──────────┘
-    ↓           ↓
-    └────→ ALL FEED MOSQUE LOOP ←────┘
+        ┌──────┼──────┬───────────┐
+        ↓      ↓      ↓           ↓
+    ┌──────┐┌──────┐┌───────┐┌────────┐
+    │TRUST ││CIRCLE││RAMADAN││ APP    │
+    │ LOOP ││ LOOP ││ SURGE ││ STORE  │
+    │      ││      ││       ││ LOOP   │
+    │Tells ││Invites││30-day││5★     │
+    │1-2   ││family ││surge  ││reviews│
+    │friends││circle ││amps   ││→ ASO  │
+    │over  ││       ││all    ││traffic│
+    │months││       ││loops  ││       │
+    └───┬──┘└───┬──┘└───┬───┘└───┬───┘
+        ↓       ↓       ↓        ↓
+        └──────→ NEW USERS ←─────┘
+             (all installs free)
 ```
+
+All four loops compound. None require paid ads.
 
 ---
 
-## Metrics Framework (App Version)
+## Metrics Framework
 
 | Metric | 30 days | 90 days | 6 months |
 |--------|---------|---------|----------|
-| **Total installs** | 2,000 | 10,000 | 50,000 |
+| **Total installs** | 500 | 3,000 | 12,000 |
 | **DAU / MAU** | 30% | 40% | 40% |
-| **K-factor** | 0.5 | 1.0 | 1.5 |
-| **Organic % of installs** | 30% | 60% | 80% |
-| **Groups created** | 200 | 1,500 | 8,000 |
-| **Avg group size** | 3 | 5 | 6 |
-| **Milestone cards shared / day** | 10 | 100 | 500 |
-| **7-day retention** | 35% | 45% | 50% |
-| **30-day retention** | 15% | 25% | 30% |
+| **K-factor** | 0.2 | 0.4 | 0.5 |
+| **Organic % of installs** | 50% | 70% | 85% |
+| **Circles created** | 50 | 400 | 2,000 |
+| **Avg circle size** | 3 | 4 | 5 |
+| **Days-present cards shared / day** | 5 | 30 | 100 |
+| **7-day retention** | 40% | 45% | 50% |
+| **30-day retention** | 20% | 25% | 30% |
+| **App Store rating** | 4.7 | 4.8 | 4.8 |
 | **Cost to operate** | $8/mo | $25/mo | $25/mo |
 | **CAC** | ~$0 | ~$0 | ~$0 |
 
-**If K-factor hits 1.0+ by Month 3, this goes parabolic without spending a dollar on ads.**
+**Conservative. No hockey stick. But every user is real, retained, and an advocate.**
+
+At 50,000 users (year 1-2): 2% premium skins conversion × $1.99/mo = $1,990/mo recurring. Self-sustaining.
+
+At 500,000 users (year 2-3): $19,900/mo. Now it's a business.
 
 ---
 
-## vs Hardware Growth (Comparison)
+## What We're NOT Doing (Growth Anti-Patterns)
 
-| | Hardware Ring | **Free App** |
-|---|---|---|
-| Users at 6 months | 500-1,000 | **50,000** |
-| Revenue at 6 months | $25,000-$50,000 | **$0 (free)** |
-| Cost to operate | $90/day ads + COGS | **$25/mo** |
-| Growth type | Linear (paid) | **Exponential (viral)** |
-| Path to 1M users | Never (hardware can't scale) | **12-18 months** |
-| Monetization potential at scale | Low (one-time hardware) | **High (premium tier, 1M+ users)** |
-
-**The app gives up short-term revenue for long-term dominance.** At 1M users, even a 2% premium conversion ($2.99/mo) = $60K/mo recurring.
+| Anti-Pattern | Why Not |
+|-------------|---------|
+| **Paid ads** | $0 marketing budget. Trust loop is free and more powerful |
+| **Influencer marketing** | Feels inauthentic for a worship tool |
+| **Referral rewards** | "Invite 5 friends, unlock gold theme" cheapens worship |
+| **Push notification spam** | Competitors' #1 complaint. Max 1 nudge per day, opt-in only |
+| **Gamification (badges, levels, XP)** | Worship is not a game. Progress tracking yes, gamification no |
+| **Subscription nag screens** | Muslim Pro's #2 complaint. Show premium skins once, never again unless user asks |
+| **Public leaderboards** | Riya' (showing off). Core users would leave |
+| **"Empty Throne" ranked seats** | Dropped from v1. Ranked seats contradict companionship |
+| **Streak-shame mechanics** | Duolingo guilt has no place in worship. Mercy day is default |
 
 ---
 
 ## Implementation Priority (First 30 Days Post-Launch)
 
-| # | Action | Impact on K-factor |
-|---|--------|-------------------|
-| 1 | Deep linking working perfectly | **Existential** — without this, no loop |
-| 2 | "Empty throne" group UI (empty seats with ➕) | HIGH — visual invitation trigger |
-| 3 | WhatsApp invite with pre-written Arabic + English message | HIGH — Gulf users share via WhatsApp |
-| 4 | 7-day milestone card (first shareable moment) | MED — seeds streak loop |
-| 5 | "Join a Public Group" for users without friends on app | MED — solves empty room problem |
-| 6 | Re-engagement push: "Ahmad invited you, join his circle" | MED — recovers lost invites |
+| # | Action | Impact |
+|---|--------|--------|
+| 1 | Deep linking working perfectly (WhatsApp → App Store → Install → Auto-join circle) | **Existential** — without this, no Circle Loop |
+| 2 | Privacy-first onboarding (3 promises screen) | HIGH — seeds Trust Loop immediately |
+| 3 | Circle invite card with presence-not-count framing | HIGH — "join our family's dhikr circle" |
+| 4 | WhatsApp invite pre-written in Arabic + English | HIGH — Gulf users share via WhatsApp |
+| 5 | 7-day streak card (days only, never counts) | MED — seeds WhatsApp Status organic share |
+| 6 | "Join an open circle" for users without friends on app | MED — solves empty room problem |
+| 7 | 5-star review prompt on day 7 (gentle, once) | MED — feeds App Store Loop |
+| 8 | Gentle re-engagement push: "Someone invited you to a circle" | MED — recovers lost invites |
 
 ---
 
-*"A $39 ring sells one at a time. A free app spreads like prayer through a mosque."*
+## The Uncomfortable Truth
+
+v1's growth model was exciting: K-factor 2.4, exponential, 50K in 6 months.
+
+The canonical model is honest: K-factor ~0.5, steady organic, 12K in 6 months.
+
+**But canonical-model users stay.** They tell their imam. They tell their family. They leave 5-star reviews. They never churn because there's nothing to churn from — the app is free, ad-free, and does what it says.
+
+The Muslim app market doesn't need another viral trick. It needs one app that doesn't lie.
+
+---
+
+*"We don't grow by being the most viral. We grow by being the most trusted."*
