@@ -1,6 +1,17 @@
 -- Zikr Vibe App — Simplified Schema (Privacy-First)
 -- Philosophy: Server only stores PRESENCE (✓/·), never dhikr content or counts.
 -- All dhikr data stays on-device (Hive).
+--
+-- NAMING NOTE (2026-04-24): Internal tables `groups` and `memberships` correspond
+-- to user-facing "Circles" and "Circle Members" in the canonical PRD. Not renamed
+-- here to avoid breaking beta deployment. Future migration `002_rename_circles.sql`
+-- may rename for clarity once beta users are on the migration path.
+--
+-- DEPRECATED NOTE: The server-side `streaks` table + `update_streak_on_presence`
+-- trigger is a legacy of v1 architecture. Canonical PRD says streaks should be
+-- computed client-side from local Hive data only. The server table is preserved
+-- for now to avoid breaking existing code paths, but should be removed in a future
+-- migration. Client code should prefer local Hive streak state over server streak.
 
 -- ============================================
 -- USERS

@@ -20,24 +20,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     final pages = [
       _OnboardingPage(
-        icon: Icons.touch_app_rounded,
-        title: 'Count your dhikr',
+        icon: Icons.lock_outline_rounded,
+        title: 'Your dhikr is private',
         subtitle:
-            'Tap to count. Haptic feedback on every tap.\nNo phone distraction during prayer.',
+            'Counts stay on your device.\nNo ads. No data selling. No tracking.',
         color: skin.primary,
       ),
       _OnboardingPage(
-        icon: Icons.local_fire_department_rounded,
-        title: 'Track your streak',
+        icon: Icons.touch_app_rounded,
+        title: 'Your worship is sacred',
         subtitle:
-            'See your consistency over days, weeks, months.\n7, 30, 100, 365-day milestones.',
-        color: skin.accent,
+            'Tap to count. Feel the vibration at 33, 66, 99.\nClose your eyes. No phone distraction.',
+        color: skin.primary,
       ),
       _OnboardingPage(
-        icon: Icons.group_rounded,
-        title: 'Grow with friends',
+        icon: Icons.favorite_outline_rounded,
+        title: 'Walk with your circle',
         subtitle:
-            'Create a dhikr circle with your mosque friends.\nSee who\'s most consistent.',
+            'Family or close friends — see who remembered Allah today.\nNo counts shared. No ranking. Just presence.',
         color: skin.accent,
       ),
     ];
