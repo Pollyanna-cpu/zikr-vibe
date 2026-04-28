@@ -2,18 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../core/deep_links.dart';
+import '../../../core/notifications.dart';
 import '../../../core/skin.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../providers/groups_provider.dart';
 import '../models/circle_model.dart';
 
 /// Companion Circles — presence, not competition
-class GroupsScreen extends ConsumerWidget {
+class GroupsScreen extends ConsumerStatefulWidget {
   const GroupsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GroupsScreen> createState() => _GroupsScreenState();
+}
+
+class _GroupsScreenState extends ConsumerState<GroupsScreen> {
+  bool _consumedPending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Consume any pending deep-link invite once the first frame is up.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_consumedPending) return;
+      final code = DeepLinks.takePending();
+      if (code != null && mounted) {
+        _consumedPending = true;
+        _autoJoinFromDeepLink(code);
+      }
+    });
+  }
+
+  Future<void> _autoJoinFromDeepLink(String code) async {
+    final user = ref.read(currentUserProvider);
+    final client = ref.read(supabaseClientProvider);
+    if (user == null || client == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign in to join circle "$code"')),
+      );
+      return;
+    }
+    final ok = await joinCircle(client, user.id, code);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok ? 'Joined circle "$code"' : 'Could not find circle "$code"',
+        ),
+      ),
+    );
+    if (ok) ref.invalidate(circlesProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final circlesAsync = ref.watch(circlesProvider);
     final skin = ref.watch(skinProvider);
@@ -589,7 +635,7 @@ class _CircleCard extends ConsumerWidget {
                         ),
                       ),
                     )
-                  else
+                  else ...[
                     Text(
                       member.lastActiveLabel ?? '',
                       style: GoogleFonts.inter(
@@ -597,11 +643,92 @@ class _CircleCard extends ConsumerWidget {
                         color: skin.inkMuted,
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    _NudgeButton(
+                      circleName: circle.name,
+                      memberName: member.displayName,
+                    ),
+                  ],
                 ],
               ),
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Gentle Nudge button — content-free "thinking of you" tap (PRD US-3.6).
+///
+/// Throttled to 1 nudge per member per day via Hive `settings` box.
+/// Local-only for v1: shows confirmation snackbar + local notification preview.
+/// Server delivery (FCM / Supabase Realtime) is a future migration.
+class _NudgeButton extends ConsumerWidget {
+  final String circleName;
+  final String memberName;
+
+  const _NudgeButton({
+    required this.circleName,
+    required this.memberName,
+  });
+
+  String get _throttleKey {
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    return 'nudge:$circleName:$memberName:$today';
+  }
+
+  bool _alreadyNudgedToday() {
+    if (!Hive.isBoxOpen('settings')) return false;
+    return (Hive.box('settings').get(_throttleKey) as bool?) ?? false;
+  }
+
+  Future<void> _send(BuildContext context) async {
+    if (_alreadyNudgedToday()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Already nudged $memberName today')),
+      );
+      return;
+    }
+    if (Hive.isBoxOpen('settings')) {
+      Hive.box('settings').put(_throttleKey, true);
+    }
+    // Local preview notification — confirms send.
+    await NotificationService.showCircleNudge(
+      circleName: circleName,
+      active: 0,
+      total: 0,
+    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Sent a gentle reminder to $memberName · "thinking of you"',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => _send(context),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: skin.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: skin.divider),
+        ),
+        child: Icon(
+          Icons.favorite_outline_rounded,
+          size: 14,
+          color: skin.primary,
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'deep_links.dart';
 import '../features/auth/providers/auth_provider.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/onboarding_screen.dart';
@@ -29,6 +30,22 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/dhikr',
     redirect: (context, state) {
+      // If a deep-link invite is pending, route to /groups so the user
+      // can confirm joining the circle. The screen consumes the pending
+      // code from Hive on display.
+      final pendingInvite = DeepLinks.peekPending();
+      if (pendingInvite != null && state.matchedLocation != '/groups') {
+        // Only redirect once we're past auth gating (handled below).
+        // If user must auth first, fall through to login redirect; the
+        // pending code stays in Hive and we'll catch it after login.
+        final supabaseConfigured =
+            ref.read(supabaseClientProvider) != null;
+        final isLoggedIn = authState.valueOrNull != null;
+        if (!supabaseConfigured || skippedAuth || isLoggedIn) {
+          return '/groups';
+        }
+      }
+
       // Skip auth redirect if Supabase not configured
       if (ref.read(supabaseClientProvider) == null) return null;
 
