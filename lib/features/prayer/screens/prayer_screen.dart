@@ -1,10 +1,22 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../core/skin.dart';
 import '../../../core/prayer_api_service.dart';
+import '../../../core/notifications.dart';
+
+/// User pref: prayer reminders enabled (opt-in, off by default per PRD P0-13)
+final prayerRemindersEnabledProvider = StateProvider<bool>((ref) {
+  if (!Hive.isBoxOpen('settings')) return false;
+  return Hive.box('settings').get('prayer_reminders_enabled',
+      defaultValue: false) as bool;
+});
 
 final prayerDataProvider = FutureProvider<_PrayerData>((ref) async {
   double lat = 25.2048;
@@ -64,13 +76,14 @@ _PrayerData _buildFromApi(
       nextPrayerTime = dt;
       nextPrayerName = name;
     }
-    prayers.add(_PrayerTime(name, formatted, false));
+    prayers.add(_PrayerTime(name, formatted, false, dt));
   }
 
   // Mark next prayer
   for (int i = 0; i < prayers.length; i++) {
     if (prayers[i].name == nextPrayerName) {
-      prayers[i] = _PrayerTime(prayers[i].name, prayers[i].time, true);
+      prayers[i] = _PrayerTime(
+          prayers[i].name, prayers[i].time, true, prayers[i].dateTime);
     }
   }
 
@@ -100,17 +113,17 @@ _PrayerData _calculatePrayers(double lat, double lng, String locationName) {
 
   final prayers = [
     _PrayerTime('Fajr', timeFormat.format(prayerTimes.fajr),
-        nextPrayer == Prayer.fajr),
+        nextPrayer == Prayer.fajr, prayerTimes.fajr),
     _PrayerTime('Sunrise', timeFormat.format(prayerTimes.sunrise),
-        nextPrayer == Prayer.sunrise),
+        nextPrayer == Prayer.sunrise, prayerTimes.sunrise),
     _PrayerTime('Dhuhr', timeFormat.format(prayerTimes.dhuhr),
-        nextPrayer == Prayer.dhuhr),
+        nextPrayer == Prayer.dhuhr, prayerTimes.dhuhr),
     _PrayerTime('Asr', timeFormat.format(prayerTimes.asr),
-        nextPrayer == Prayer.asr),
+        nextPrayer == Prayer.asr, prayerTimes.asr),
     _PrayerTime('Maghrib', timeFormat.format(prayerTimes.maghrib),
-        nextPrayer == Prayer.maghrib),
+        nextPrayer == Prayer.maghrib, prayerTimes.maghrib),
     _PrayerTime('Isha', timeFormat.format(prayerTimes.isha),
-        nextPrayer == Prayer.isha),
+        nextPrayer == Prayer.isha, prayerTimes.isha),
   ];
 
   final qiblaDirection = Qibla.qibla(coordinates);
@@ -210,31 +223,16 @@ class _PrayerBody extends ConsumerWidget {
 
           ...data.prayers.map((prayer) => _PrayerCard(prayer: prayer)),
 
-          const Spacer(),
+          const SizedBox(height: 12),
 
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              border: Border.all(color: skin.primary),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.explore_rounded,
-                    color: skin.primary, size: 20),
-                const SizedBox(width: 10),
-                Text(
-                  'Qibla: ${data.qiblaDirection.toStringAsFixed(1)}\u00B0',
-                  style: TextStyle(
-                    color: skin.primary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _ReminderToggle(prayers: data.prayers),
+
+          const SizedBox(height: 12),
+
+          _QiblaCompass(qiblaBearing: data.qiblaDirection),
+
+          const SizedBox(height: 16),
+
 
           const SizedBox(height: 16),
         ],
@@ -247,8 +245,27 @@ class _PrayerTime {
   final String name;
   final String time;
   final bool isNext;
+  final DateTime dateTime;
 
-  _PrayerTime(this.name, this.time, this.isNext);
+  _PrayerTime(this.name, this.time, this.isNext, this.dateTime);
+}
+
+/// Schedule local notifications for the 5 obligatory daily prayers.
+/// Privacy: nothing leaves the device. Per PRD P0-13: opt-in only, off by default.
+Future<void> _schedulePrayerReminders(List<_PrayerTime> prayers) async {
+  await NotificationService.cancelAll();
+  const obligatory = {'Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'};
+  int id = 100;
+  for (final p in prayers) {
+    if (!obligatory.contains(p.name)) continue;
+    if (p.dateTime.isBefore(DateTime.now())) continue;
+    await NotificationService.schedulePrayerReminder(
+      id: id++,
+      prayerName: p.name,
+      time: p.dateTime,
+      offsetMinutes: 10,
+    );
+  }
 }
 
 class _PrayerCard extends ConsumerWidget {
@@ -300,6 +317,189 @@ class _PrayerCard extends ConsumerWidget {
               fontSize: 16,
               fontWeight: prayer.isNext ? FontWeight.w600 : FontWeight.w400,
               color: prayer.isNext ? skin.primary : skin.inkMuted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Opt-in toggle for prayer reminders. Schedules 10-min-before notifications
+/// for Fajr/Dhuhr/Asr/Maghrib/Isha. Cancels all when off.
+class _ReminderToggle extends ConsumerWidget {
+  final List<_PrayerTime> prayers;
+
+  const _ReminderToggle({required this.prayers});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+    final enabled = ref.watch(prayerRemindersEnabledProvider);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: enabled ? skin.primarySoft : skin.surfaceCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: enabled ? skin.primary : skin.divider,
+          width: enabled ? 1.5 : 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            enabled
+                ? Icons.notifications_active_rounded
+                : Icons.notifications_none_rounded,
+            color: enabled ? skin.primary : skin.inkMuted,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  enabled ? 'Reminders on' : 'Prayer reminders',
+                  style: TextStyle(
+                    color: skin.ink,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  enabled
+                      ? '10 min before each prayer'
+                      : 'Off by default. Your dhikr stays private.',
+                  style: TextStyle(color: skin.inkMuted, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: enabled,
+            activeColor: skin.primary,
+            onChanged: (val) async {
+              Hive.box('settings').put('prayer_reminders_enabled', val);
+              ref.read(prayerRemindersEnabledProvider.notifier).state = val;
+              if (val) {
+                await _schedulePrayerReminders(prayers);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Prayer reminders enabled'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } else {
+                await NotificationService.cancelAll();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Live Qibla compass — needle rotates as device heading changes,
+/// pointing toward Mecca from current GPS coordinates.
+class _QiblaCompass extends ConsumerStatefulWidget {
+  final double qiblaBearing;
+
+  const _QiblaCompass({required this.qiblaBearing});
+
+  @override
+  ConsumerState<_QiblaCompass> createState() => _QiblaCompassState();
+}
+
+class _QiblaCompassState extends ConsumerState<_QiblaCompass> {
+  StreamSubscription<CompassEvent>? _sub;
+  double? _heading;
+
+  @override
+  void initState() {
+    super.initState();
+    final stream = FlutterCompass.events;
+    if (stream != null) {
+      _sub = stream.listen((event) {
+        if (!mounted) return;
+        setState(() => _heading = event.heading);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = ref.watch(skinProvider);
+    final heading = _heading;
+    final qiblaFromDevice = heading == null
+        ? null
+        : (widget.qiblaBearing - heading) * (math.pi / 180);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: skin.surfaceCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: skin.divider),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 56,
+            height: 56,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: skin.divider, width: 1.5),
+                  ),
+                ),
+                if (qiblaFromDevice != null)
+                  Transform.rotate(
+                    angle: qiblaFromDevice,
+                    child: Icon(Icons.navigation_rounded,
+                        color: skin.primary, size: 36),
+                  )
+                else
+                  Icon(Icons.explore_rounded,
+                      color: skin.inkMuted, size: 28),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Qibla',
+                  style: TextStyle(
+                    color: skin.ink,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  heading == null
+                      ? 'Bearing ${widget.qiblaBearing.toStringAsFixed(1)}° from North'
+                      : 'Point the arrow up to face Mecca',
+                  style: TextStyle(color: skin.inkMuted, fontSize: 12),
+                ),
+              ],
             ),
           ),
         ],
