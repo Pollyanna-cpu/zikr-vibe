@@ -96,31 +96,21 @@ Future<String?> createCircle(SupabaseClient client, String userId, String name) 
 }
 
 /// Join a circle by invite code
+///
+/// Uses the `join_group_by_invite_code` SECURITY DEFINER RPC so the client
+/// never reads `groups` directly with `invite_code`. The RPC validates auth,
+/// looks up the group atomically, and inserts the membership in one round trip.
+/// Returns `true` on success (joined or already a member), `false` if the code
+/// is invalid or the call fails.
 Future<bool> joinCircle(SupabaseClient client, String userId, String code) async {
-  final groups = await client
-      .from('groups')
-      .select('id')
-      .eq('invite_code', code.toUpperCase())
-      .limit(1);
-
-  if (groups.isEmpty) return false;
-
-  final groupId = groups[0]['id'] as String;
-
-  // Check if already a member
-  final existing = await client
-      .from('memberships')
-      .select('id')
-      .eq('group_id', groupId)
-      .eq('user_id', userId)
-      .limit(1);
-
-  if (existing.isNotEmpty) return true; // Already a member
-
-  await client.from('memberships').insert({
-    'group_id': groupId,
-    'user_id': userId,
-  });
-
-  return true;
+  try {
+    final result = await client.rpc(
+      'join_group_by_invite_code',
+      params: {'code': code.toUpperCase()},
+    );
+    return result != null;
+  } catch (_) {
+    // RPC raises 'Invalid invite code' / 'Authentication required' on failure.
+    return false;
+  }
 }

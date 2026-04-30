@@ -23,6 +23,9 @@ void main() async {
       url: AppConstants.supabaseUrl,
       anonKey: AppConstants.supabaseAnonKey,
     );
+    // Wipe any pending invite code on signOut so the next account on this
+    // device does not inherit the previous user's circle invite.
+    DeepLinks.attachAuthListener();
   }
 
   // Initialize notifications

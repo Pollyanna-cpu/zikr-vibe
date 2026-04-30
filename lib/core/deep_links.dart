@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Deep link handler for circle invites.
 ///
@@ -11,10 +13,28 @@ import 'package:hive_flutter/hive_flutter.dart';
 ///
 /// Privacy note: invite codes are short opaque tokens. They identify a circle,
 /// not a user. No analytics, no IP logging — `app_links` is local OS routing.
+/// On `signedOut` we clear any pending invite code so the next account on this
+/// device does not silently inherit the previous user's circle invite.
 class DeepLinks {
   static const String _scheme = 'zikrvibe';
   static const String _host = 'zikrvibe.com';
   static const String _pendingKey = 'pending_invite_code';
+
+  static StreamSubscription<AuthState>? _authSub;
+
+  /// Wire up the auth-state listener so signOut wipes any pending invite code.
+  /// Call once at app boot (after `Supabase.initialize` and `Hive` open).
+  /// Idempotent — re-calling cancels the previous subscription first.
+  static void attachAuthListener() {
+    _authSub?.cancel();
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.signedOut) {
+        if (Hive.isBoxOpen('settings')) {
+          Hive.box('settings').delete(_pendingKey);
+        }
+      }
+    });
+  }
 
   /// Parse a deep-link URI and persist any extracted invite code.
   /// Returns the code if one was found, otherwise `null`.
