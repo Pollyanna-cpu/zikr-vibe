@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../core/auth_prefs.dart';
 import '../../../core/deep_links.dart';
 import '../../../core/notifications.dart';
 import '../../../core/skin.dart';
@@ -25,28 +27,33 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
   @override
   void initState() {
     super.initState();
-    // Consume any pending deep-link invite once the first frame is up.
+    // Try once on first frame. If the user isn't signed in yet we PEEK and
+    // leave the code in Hive — a ref.listen below retries the moment the
+    // user signs in, instead of dropping the invite on the floor.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_consumedPending) return;
-      final code = DeepLinks.takePending();
-      if (code != null && mounted) {
-        _consumedPending = true;
-        _autoJoinFromDeepLink(code);
-      }
+      _maybeConsumeDeepLink();
     });
   }
 
-  Future<void> _autoJoinFromDeepLink(String code) async {
+  Future<void> _maybeConsumeDeepLink() async {
+    if (_consumedPending || !mounted) return;
+    final code = DeepLinks.peekPending();
+    if (code == null) return;
+
     final user = ref.read(currentUserProvider);
     final client = ref.read(supabaseClientProvider);
+
     if (user == null || client == null) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Sign in to join circle "$code"')),
       );
-      return;
+      return; // keep code in Hive for next sign-in
     }
-    final ok = await joinCircle(client, user.id, code);
+
+    // User is signed in — now it's safe to consume and join.
+    _consumedPending = true;
+    DeepLinks.takePending();
+    final ok = await joinCircle(ref, client, user.id, code);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -60,6 +67,15 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // When the user transitions null → signed-in, retry the pending invite
+    // (e.g. tapped a deep link before logging in, then signed in).
+    ref.listen(currentUserProvider, (prev, next) {
+      if (prev == null && next != null) {
+        _consumedPending = false;
+        _maybeConsumeDeepLink();
+      }
+    });
+
     final user = ref.watch(currentUserProvider);
     final circlesAsync = ref.watch(circlesProvider);
     final skin = ref.watch(skinProvider);
@@ -73,22 +89,17 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
       body: user == null
           ? const _NotLoggedIn()
           : circlesAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, _) => Center(child: Text('Error: $err')),
               data: (circles) => circles.isEmpty
                   ? _EmptyState(
-                      onCreateCircle: () =>
-                          _showCreateSheet(context, ref),
-                      onJoinCircle: () =>
-                          _showJoinSheet(context, ref),
+                      onCreateCircle: () => _showCreateSheet(context, ref),
+                      onJoinCircle: () => _showJoinSheet(context, ref),
                     )
                   : _CirclesList(
                       circles: circles,
-                      onCreateCircle: () =>
-                          _showCreateSheet(context, ref),
-                      onJoinCircle: () =>
-                          _showJoinSheet(context, ref),
+                      onCreateCircle: () => _showCreateSheet(context, ref),
+                      onJoinCircle: () => _showJoinSheet(context, ref),
                     ),
             ),
     );
@@ -106,7 +117,9 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
-          24, 24, 24,
+          24,
+          24,
+          24,
           MediaQuery.of(ctx).viewInsets.bottom + 24,
         ),
         child: Column(
@@ -115,7 +128,8 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
           children: [
             Center(
               child: Container(
-                width: 36, height: 4,
+                width: 36,
+                height: 4,
                 decoration: BoxDecoration(
                   color: skin.divider,
                   borderRadius: BorderRadius.circular(2),
@@ -146,18 +160,21 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
               controller: controller,
               autofocus: true,
               textCapitalization: TextCapitalization.words,
+              maxLength: 30,
               style: GoogleFonts.inter(fontSize: 16),
               decoration: InputDecoration(
                 hintText: 'e.g. Family, Mosque friends',
                 hintStyle: GoogleFonts.inter(color: skin.inkMuted),
                 filled: true,
                 fillColor: skin.surface,
+                counterText: '',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 14,
+                  horizontal: 16,
+                  vertical: 14,
                 ),
               ),
             ),
@@ -169,11 +186,9 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                   final name = controller.text.trim();
                   if (name.isEmpty) return;
                   final client = ref.read(supabaseClientProvider);
-                  final user = ref.read(currentUserProvider);
-                  if (client == null || user == null) return;
+                  if (client == null) return;
 
-                  final inviteCode =
-                      await createCircle(client, user.id, name);
+                  final inviteCode = await createCircle(ref, client, name);
                   if (!ctx.mounted) return;
                   Navigator.pop(ctx);
 
@@ -188,10 +203,17 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                         action: SnackBarAction(
                           label: 'Copy',
                           onPressed: () {
-                            Clipboard.setData(
-                                ClipboardData(text: inviteCode));
+                            Clipboard.setData(ClipboardData(text: inviteCode));
                           },
                         ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Could not create circle — check your connection and try again'),
+                        behavior: SnackBarBehavior.floating,
                       ),
                     );
                   }
@@ -231,7 +253,9 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
-          24, 24, 24,
+          24,
+          24,
+          24,
           MediaQuery.of(ctx).viewInsets.bottom + 24,
         ),
         child: Column(
@@ -240,7 +264,8 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
           children: [
             Center(
               child: Container(
-                width: 36, height: 4,
+                width: 36,
+                height: 4,
                 decoration: BoxDecoration(
                   color: skin.divider,
                   borderRadius: BorderRadius.circular(2),
@@ -264,8 +289,8 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
               style: GoogleFonts.inter(fontSize: 16, letterSpacing: 2),
               decoration: InputDecoration(
                 hintText: 'Paste invite code',
-                hintStyle: GoogleFonts.inter(
-                    color: skin.inkMuted, letterSpacing: 0),
+                hintStyle:
+                    GoogleFonts.inter(color: skin.inkMuted, letterSpacing: 0),
                 filled: true,
                 fillColor: skin.surface,
                 border: OutlineInputBorder(
@@ -273,7 +298,8 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 14,
+                  horizontal: 16,
+                  vertical: 14,
                 ),
               ),
             ),
@@ -288,8 +314,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                   final user = ref.read(currentUserProvider);
                   if (client == null || user == null) return;
 
-                  final success =
-                      await joinCircle(client, user.id, code);
+                  final success = await joinCircle(ref, client, user.id, code);
                   if (!ctx.mounted) return;
                   Navigator.pop(ctx);
 
@@ -297,9 +322,8 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(success
-                          ? 'Joined circle!'
-                          : 'Invalid invite code.'),
+                      content: Text(
+                          success ? 'Joined circle!' : 'Invalid invite code.'),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -335,9 +359,43 @@ class _NotLoggedIn extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final skin = ref.watch(skinProvider);
     return Center(
-      child: Text(
-        'Sign in to create or join circles',
-        style: GoogleFonts.inter(color: skin.inkMuted, fontSize: 15),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.people_outline_rounded, size: 36, color: skin.inkMuted),
+            const SizedBox(height: 16),
+            Text(
+              'Sign in to create or join circles',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(color: skin.inkSoft, fontSize: 15),
+            ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: () {
+                resetSkippedAuth(ref);
+                context.go('/login');
+              },
+              style: TextButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                backgroundColor: skin.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Sign In',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -398,8 +456,7 @@ class _EmptyState extends ConsumerWidget {
             const SizedBox(height: 8),
             Container(
               margin: const EdgeInsets.only(top: 12),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: skin.accentSoft,
                 borderRadius: BorderRadius.circular(10),
@@ -493,8 +550,8 @@ class _CirclesList extends ConsumerWidget {
             const SizedBox(width: 16),
             TextButton(
               onPressed: onJoinCircle,
-              child: Text('Join',
-                  style: GoogleFonts.inter(color: skin.inkMuted)),
+              child:
+                  Text('Join', style: GoogleFonts.inter(color: skin.inkMuted)),
             ),
           ],
         ),
@@ -524,15 +581,18 @@ class _CircleCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Text(
-                circle.name,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: skin.ink,
+              Expanded(
+                child: Text(
+                  circle.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: skin.ink,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               if (circle.sharedStreak > 0)
                 Container(
                   padding:
@@ -544,8 +604,7 @@ class _CircleCard extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('\u{1F525}',
-                          style: TextStyle(fontSize: 12)),
+                      const Text('\u{1F525}', style: TextStyle(fontSize: 12)),
                       const SizedBox(width: 4),
                       Text(
                         '${circle.sharedStreak}d together',
@@ -580,8 +639,8 @@ class _CircleCard extends ConsumerWidget {
                     subject: 'Join ${circle.name} on Zikr Vibe',
                   );
                 },
-                child: Icon(Icons.share_outlined,
-                    size: 18, color: skin.inkMuted),
+                child:
+                    Icon(Icons.share_outlined, size: 18, color: skin.inkMuted),
               ),
             ],
           ),
@@ -593,9 +652,8 @@ class _CircleCard extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 16,
-                    backgroundColor: member.activeToday
-                        ? skin.primarySoft
-                        : skin.surface,
+                    backgroundColor:
+                        member.activeToday ? skin.primarySoft : skin.surface,
                     child: Text(
                       member.displayName.isNotEmpty
                           ? member.displayName[0]
@@ -603,9 +661,8 @@ class _CircleCard extends ConsumerWidget {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: member.activeToday
-                            ? skin.primary
-                            : skin.inkMuted,
+                        color:
+                            member.activeToday ? skin.primary : skin.inkMuted,
                       ),
                     ),
                   ),

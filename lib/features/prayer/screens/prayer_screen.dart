@@ -19,9 +19,10 @@ final prayerRemindersEnabledProvider = StateProvider<bool>((ref) {
 });
 
 final prayerDataProvider = FutureProvider<_PrayerData>((ref) async {
-  double lat = 25.2048;
-  double lng = 55.2708;
-  String locationName = 'Dubai (default)';
+  double? lat;
+  double? lng;
+  String locationName = '';
+  bool isApproximate = false;
 
   LocationPermission permission = await Geolocator.checkPermission();
   if (permission == LocationPermission.denied) {
@@ -39,26 +40,47 @@ final prayerDataProvider = FutureProvider<_PrayerData>((ref) async {
       lng = position.longitude;
       locationName = '${lat.toStringAsFixed(2)}, ${lng.toStringAsFixed(2)}';
     } catch (_) {
-      // Fall back to Dubai
+      // Fall through to timezone-based estimate.
     }
   }
 
-  // Try Aladhan API first, fall back to local adhan_dart
+  if (lat == null || lng == null) {
+    final offsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
+    var estLng = (offsetMinutes / 60.0) * 15.0;
+    if (estLng > 180) estLng -= 360;
+    if (estLng < -180) estLng += 360;
+    lat = 22.0;
+    lng = estLng;
+    locationName = 'Approximate (from timezone) — enable location for precise times';
+    isApproximate = true;
+  }
+
   final apiTimes = await PrayerApiService.fetchByCoordinates(lat, lng);
   if (apiTimes != null) {
-    return _buildFromApi(apiTimes, lat, lng, locationName);
+    return _buildFromApi(apiTimes, lat, lng, locationName,
+        isApproximate: isApproximate);
   }
-  return _calculatePrayers(lat, lng, locationName);
+  return _calculatePrayers(lat, lng, locationName,
+      isApproximate: isApproximate);
 });
 
 _PrayerData _buildFromApi(
-  Map<String, String> timings, double lat, double lng, String locationName,
-) {
+  Map<String, String> timings,
+  double lat,
+  double lng,
+  String locationName, {
+  bool isApproximate = false,
+}) {
   final now = DateTime.now();
   final timeFormat = DateFormat('hh:mm a');
   final prayerNames = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
-  // Parse API times (HH:mm format) into DateTime for comparison
+  // API returns HH:mm in the queried coordinates' local timezone.
+  // We construct the DateTime in the device's local timezone — this is
+  // accurate when query coords ≈ device location (the common case after
+  // GPS or timezone-based fallback). For a future manual city-picker
+  // (cross-timezone), parse `meta.timezone` from the API response and
+  // use tz.TZDateTime.from to convert.
   DateTime? nextPrayerTime;
   String? nextPrayerName;
   final List<_PrayerTime> prayers = [];
@@ -79,7 +101,6 @@ _PrayerData _buildFromApi(
     prayers.add(_PrayerTime(name, formatted, false, dt));
   }
 
-  // Mark next prayer
   for (int i = 0; i < prayers.length; i++) {
     if (prayers[i].name == nextPrayerName) {
       prayers[i] = _PrayerTime(
@@ -95,10 +116,16 @@ _PrayerData _buildFromApi(
     locationName: locationName,
     qiblaDirection: qiblaDirection,
     method: 'Umm al-Qura (Aladhan API)',
+    isApproximate: isApproximate,
   );
 }
 
-_PrayerData _calculatePrayers(double lat, double lng, String locationName) {
+_PrayerData _calculatePrayers(
+  double lat,
+  double lng,
+  String locationName, {
+  bool isApproximate = false,
+}) {
   final coordinates = Coordinates(lat, lng);
   final params = CalculationMethodParameters.ummAlQura();
   final now = DateTime.now();
@@ -111,19 +138,21 @@ _PrayerData _calculatePrayers(double lat, double lng, String locationName) {
   final nextPrayer = prayerTimes.nextPrayer();
   final timeFormat = DateFormat('hh:mm a');
 
+  // adhan_dart returns DateTime in UTC; DateFormat formats in the device's
+  // local timezone, so the displayed times automatically follow the phone.
   final prayers = [
-    _PrayerTime('Fajr', timeFormat.format(prayerTimes.fajr),
-        nextPrayer == Prayer.fajr, prayerTimes.fajr),
-    _PrayerTime('Sunrise', timeFormat.format(prayerTimes.sunrise),
-        nextPrayer == Prayer.sunrise, prayerTimes.sunrise),
-    _PrayerTime('Dhuhr', timeFormat.format(prayerTimes.dhuhr),
-        nextPrayer == Prayer.dhuhr, prayerTimes.dhuhr),
-    _PrayerTime('Asr', timeFormat.format(prayerTimes.asr),
-        nextPrayer == Prayer.asr, prayerTimes.asr),
-    _PrayerTime('Maghrib', timeFormat.format(prayerTimes.maghrib),
-        nextPrayer == Prayer.maghrib, prayerTimes.maghrib),
-    _PrayerTime('Isha', timeFormat.format(prayerTimes.isha),
-        nextPrayer == Prayer.isha, prayerTimes.isha),
+    _PrayerTime('Fajr', timeFormat.format(prayerTimes.fajr.toLocal()),
+        nextPrayer == Prayer.fajr, prayerTimes.fajr.toLocal()),
+    _PrayerTime('Sunrise', timeFormat.format(prayerTimes.sunrise.toLocal()),
+        nextPrayer == Prayer.sunrise, prayerTimes.sunrise.toLocal()),
+    _PrayerTime('Dhuhr', timeFormat.format(prayerTimes.dhuhr.toLocal()),
+        nextPrayer == Prayer.dhuhr, prayerTimes.dhuhr.toLocal()),
+    _PrayerTime('Asr', timeFormat.format(prayerTimes.asr.toLocal()),
+        nextPrayer == Prayer.asr, prayerTimes.asr.toLocal()),
+    _PrayerTime('Maghrib', timeFormat.format(prayerTimes.maghrib.toLocal()),
+        nextPrayer == Prayer.maghrib, prayerTimes.maghrib.toLocal()),
+    _PrayerTime('Isha', timeFormat.format(prayerTimes.isha.toLocal()),
+        nextPrayer == Prayer.isha, prayerTimes.isha.toLocal()),
   ];
 
   final qiblaDirection = Qibla.qibla(coordinates);
@@ -133,6 +162,7 @@ _PrayerData _calculatePrayers(double lat, double lng, String locationName) {
     locationName: locationName,
     qiblaDirection: qiblaDirection,
     method: 'Umm al-Qura',
+    isApproximate: isApproximate,
   );
 }
 
@@ -141,12 +171,14 @@ class _PrayerData {
   final String locationName;
   final double qiblaDirection;
   final String method;
+  final bool isApproximate;
 
   _PrayerData({
     required this.prayers,
     required this.locationName,
     required this.qiblaDirection,
     required this.method,
+    this.isApproximate = false,
   });
 }
 
@@ -219,6 +251,32 @@ class _PrayerBody extends ConsumerWidget {
             ),
           ),
 
+          if (data.isApproximate) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: skin.surfaceCard,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: skin.divider),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline_rounded,
+                      size: 16, color: skin.inkMuted),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Times follow your phone’s timezone. Enable location for prayer times tied to your exact GPS coordinates.',
+                      style: TextStyle(color: skin.inkMuted, fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           const SizedBox(height: 24),
 
           ...data.prayers.map((prayer) => _PrayerCard(prayer: prayer)),
@@ -229,7 +287,10 @@ class _PrayerBody extends ConsumerWidget {
 
           const SizedBox(height: 12),
 
-          _QiblaCompass(qiblaBearing: data.qiblaDirection),
+          _QiblaCompass(
+            qiblaBearing: data.qiblaDirection,
+            isApproximate: data.isApproximate,
+          ),
 
           const SizedBox(height: 16),
 
@@ -407,10 +468,22 @@ class _ReminderToggle extends ConsumerWidget {
 
 /// Live Qibla compass — needle rotates as device heading changes,
 /// pointing toward Mecca from current GPS coordinates.
+///
+/// Bearing comes from `Qibla.qibla(coordinates)` (degrees from true north).
+/// Device heading from flutter_compass is degrees from true north on iOS
+/// (CLLocationManager.trueHeading) and on Android (rotation vector +
+/// geomagnetic field) — no manual declination correction needed. When
+/// `isApproximate` is true the underlying coordinates are estimated from
+/// the device's timezone, so the bearing has a corresponding margin —
+/// we surface that to the user instead of pretending it's GPS-precise.
 class _QiblaCompass extends ConsumerStatefulWidget {
   final double qiblaBearing;
+  final bool isApproximate;
 
-  const _QiblaCompass({required this.qiblaBearing});
+  const _QiblaCompass({
+    required this.qiblaBearing,
+    this.isApproximate = false,
+  });
 
   @override
   ConsumerState<_QiblaCompass> createState() => _QiblaCompassState();
@@ -495,8 +568,10 @@ class _QiblaCompassState extends ConsumerState<_QiblaCompass> {
                 const SizedBox(height: 2),
                 Text(
                   heading == null
-                      ? 'Bearing ${widget.qiblaBearing.toStringAsFixed(1)}° from North'
-                      : 'Point the arrow up to face Mecca',
+                      ? 'Mecca is ${widget.qiblaBearing.toStringAsFixed(1)}° from true north (compass unavailable)'
+                      : widget.isApproximate
+                          ? 'Point the arrow up — direction approximate, enable location for precision'
+                          : 'Point the arrow up to face Mecca',
                   style: TextStyle(color: skin.inkMuted, fontSize: 12),
                 ),
               ],

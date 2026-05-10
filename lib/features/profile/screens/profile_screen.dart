@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/auth_prefs.dart';
 import '../../../core/skin.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../iap/iap_service.dart';
 import '../../streak/providers/streak_provider.dart';
 import '../../groups/providers/groups_provider.dart';
 import 'skin_selector_screen.dart';
@@ -113,8 +116,7 @@ class ProfileScreen extends ConsumerWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const SkinSelectorScreen()),
+                  MaterialPageRoute(builder: (_) => const SkinSelectorScreen()),
                 );
               },
             ),
@@ -124,12 +126,41 @@ class ProfileScreen extends ConsumerWidget {
               skin: skin,
               onTap: () {},
             ),
+            _SettingsTile(
+              icon: Icons.restore_rounded,
+              label: 'Restore Purchases',
+              skin: skin,
+              onTap: () async {
+                final ok =
+                    await ref.read(iapServiceProvider).restorePurchases();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(ok
+                        ? 'Restoring purchases…'
+                        : 'Store not available on this device'),
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              },
+            ),
 
             const SizedBox(height: 32),
 
-            // Sign out
+            // Sign out (works for both authed users + guest "Use without account" mode)
             TextButton(
-              onPressed: () => ref.read(authServiceProvider).signOut(),
+              onPressed: () async {
+                // 1. If Supabase session exists, sign out
+                final isLoggedIn =
+                    ref.read(authStateProvider).valueOrNull != null;
+                if (isLoggedIn) {
+                  await ref.read(authServiceProvider).signOut();
+                }
+                // 2. Always exit guest mode (otherwise router stays on main shell)
+                resetSkippedAuth(ref);
+                // 3. Force back to login (router redirect won't fire if already on shell route)
+                if (context.mounted) context.go('/login');
+              },
               child: Text(
                 'Sign Out',
                 style: TextStyle(color: skin.error),

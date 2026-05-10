@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/auth_prefs.dart';
 import '../../../core/skin.dart';
-import '../../../core/router.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -43,17 +43,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  /// Pragmatic email check — RFC 5322 is huge but in practice this catches
+  /// the typos testers actually make ("user@" / "user.com" / "user@domain").
+  static final _emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
   Future<void> _submitEmail() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     if (email.isEmpty || password.isEmpty) return;
+
+    if (!_emailRe.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address')),
+      );
+      return;
+    }
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 6 characters')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
       final authService = ref.read(authServiceProvider);
       if (_isSignUp) {
         final name = _nameController.text.trim();
-        if (name.isEmpty) return;
+        if (name.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please enter your name')),
+            );
+            setState(() => _isLoading = false);
+          }
+          return;
+        }
         await authService.signUpWithEmail(email, password, name);
       } else {
         await authService.signInWithEmail(email, password);
@@ -61,7 +86,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${_isSignUp ? "Sign up" : "Sign in"} failed: $e')),
+          SnackBar(
+              content: Text('${_isSignUp ? "Sign up" : "Sign in"} failed: $e')),
         );
       }
     } finally {
@@ -102,16 +128,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 'Zikr Vibe',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  color: skin.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+                      color: skin.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Count your dhikr. Nothing else watches.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: skin.inkSoft,
-                ),
+                      color: skin.inkSoft,
+                    ),
                 textAlign: TextAlign.center,
               ),
 

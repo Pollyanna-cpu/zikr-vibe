@@ -1,6 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
+import '../../../core/auth_session_guard.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../models/circle_model.dart';
 
@@ -10,89 +11,124 @@ final circlesProvider = FutureProvider<List<Circle>>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (client == null || user == null) return [];
 
-  // Get groups the user is a member of
-  final membershipRows = await client
-      .from('memberships')
-      .select('group_id')
-      .eq('user_id', user.id);
-
-  if (membershipRows.isEmpty) return [];
-
-  final groupIds =
-      (membershipRows as List).map((r) => r['group_id'] as String).toList();
-
-  // Get group details
-  final groupRows =
-      await client.from('groups').select().inFilter('id', groupIds);
-
-  final today = DateTime.now().toIso8601String().substring(0, 10);
-
-  final circles = <Circle>[];
-  for (final g in groupRows) {
-    // Get members for this group
-    final memberRows = await client
+  try {
+    // Get groups the user is a member of
+    final membershipRows = await client
         .from('memberships')
-        .select('user_id, users(display_name)')
-        .eq('group_id', g['id']);
+        .select('group_id')
+        .eq('user_id', user.id);
 
-    final memberUserIds =
-        (memberRows as List).map((r) => r['user_id'] as String).toList();
+    if (membershipRows.isEmpty) return [];
 
-    // Check today's presence for all members
-    final presenceRows = await client
-        .from('daily_presence')
-        .select('user_id')
-        .inFilter('user_id', memberUserIds)
-        .eq('date', today);
+    final groupIds =
+        (membershipRows as List).map((r) => r['group_id'] as String).toList();
 
-    final activeUserIds =
-        (presenceRows as List).map((r) => r['user_id'] as String).toSet();
+    // Get group details
+    final groupRows =
+        await client.from('groups').select().inFilter('id', groupIds);
 
-    final members = memberRows.map<CircleMember>((m) {
-      final uid = m['user_id'] as String;
-      final name = m['users']?['display_name'] as String? ?? 'Member';
-      return CircleMember(
-        userId: uid,
-        displayName: name,
-        activeToday: activeUserIds.contains(uid),
-        lastActiveLabel: activeUserIds.contains(uid) ? 'today' : null,
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+
+    final circles = <Circle>[];
+    for (final g in groupRows) {
+      // Get members for this group
+      final memberRows = await client
+          .from('memberships')
+          .select('user_id, users(display_name)')
+          .eq('group_id', g['id']);
+
+      final memberUserIds =
+          (memberRows as List).map((r) => r['user_id'] as String).toList();
+
+      // Check today's presence for all members
+      final presenceRows = await client
+          .from('daily_presence')
+          .select('user_id')
+          .inFilter('user_id', memberUserIds)
+          .eq('date', today);
+
+      final activeUserIds =
+          (presenceRows as List).map((r) => r['user_id'] as String).toSet();
+
+      final members = memberRows.map<CircleMember>((m) {
+        final uid = m['user_id'] as String;
+        final name = m['users']?['display_name'] as String? ?? 'Member';
+        return CircleMember(
+          userId: uid,
+          displayName: name,
+          activeToday: activeUserIds.contains(uid),
+          lastActiveLabel: activeUserIds.contains(uid) ? 'today' : null,
+        );
+      }).toList();
+
+      circles.add(Circle(
+        id: g['id'],
+        name: g['name'],
+        adminId: g['admin_id'] ?? '',
+        inviteCode: g['invite_code'],
+        members: members,
+        sharedStreak: g['shared_streak'] ?? 0,
+        longestSharedStreak: g['longest_shared_streak'] ?? 0,
+      ));
+    }
+
+    return circles;
+  } catch (e) {
+    debugPrint('[Groups] circlesProvider error: $e');
+    if (isStaleAuthError(e)) {
+      await clearStaleAuthSession(
+        ref,
+        client,
+        reason: 'groups fetch failed with stale auth: $e',
       );
-    }).toList();
-
-    circles.add(Circle(
-      id: g['id'],
-      name: g['name'],
-      adminId: g['admin_id'] ?? '',
-      inviteCode: g['invite_code'],
-      members: members,
-      sharedStreak: g['shared_streak'] ?? 0,
-      longestSharedStreak: g['longest_shared_streak'] ?? 0,
-    ));
+      return [];
+    }
+    rethrow;
   }
-
-  return circles;
 });
 
-/// Create a new circle
-Future<String?> createCircle(SupabaseClient client, String userId, String name) async {
-  final inviteCode = const Uuid().v4().substring(0, 8).toUpperCase();
-
-  final result = await client.from('groups').insert({
-    'name': name,
-    'admin_id': userId,
-    'invite_code': inviteCode,
-    'member_count': 1,
-  }).select('id').single();
-
-  final groupId = result['id'] as String;
-
-  // Add creator as first member
-  await client.from('memberships').insert({
-    'group_id': groupId,
-    'user_id': userId,
-  });
-
-  return inviteCode;
+/// Create a new circle.
+///
+/// Returns the invite code on success. Returns `null` on any failure -
+/// caller surfaces a SnackBar.
+///
+/// Uses the `create_circle` SECURITY DEFINER RPC so the client never inserts
+/// directly into `groups` or `memberships`. That keeps Create aligned with
+/// Join Circle's RPC path and avoids direct PostgREST INSERT RLS edge cases.
+Future<String?> createCircle(
+  dynamic ref,
+  SupabaseClient client,
+  String name,
+) async {
+  try {
+    final result = await client.rpc('create_circle', params: {
+      'p_name': name.trim(),
+    });
+    return result as String?;
+  } on PostgrestException catch (e) {
+    debugPrint('[Groups] createCircle Postgrest ${e.code}: ${e.message}');
+    if (isStaleAuthError(e)) {
+      await clearStaleAuthSession(
+        ref,
+        client,
+        reason: 'createCircle failed with stale auth: $e',
+      );
+    }
+    return null;
+  } on AuthException catch (e) {
+    debugPrint('[Groups] createCircle auth: $e');
+    if (isStaleAuthError(e)) {
+      await clearStaleAuthSession(
+        ref,
+        client,
+        reason: 'createCircle auth failed: $e',
+      );
+    }
+    return null;
+  } catch (e) {
+    debugPrint('[Groups] createCircle error: $e');
+    return null;
+  }
 }
 
 /// Join a circle by invite code
@@ -102,14 +138,40 @@ Future<String?> createCircle(SupabaseClient client, String userId, String name) 
 /// looks up the group atomically, and inserts the membership in one round trip.
 /// Returns `true` on success (joined or already a member), `false` if the code
 /// is invalid or the call fails.
-Future<bool> joinCircle(SupabaseClient client, String userId, String code) async {
+Future<bool> joinCircle(
+  dynamic ref,
+  SupabaseClient client,
+  String userId,
+  String code,
+) async {
   try {
     final result = await client.rpc(
       'join_group_by_invite_code',
       params: {'code': code.toUpperCase()},
     );
     return result != null;
-  } catch (_) {
+  } on PostgrestException catch (e) {
+    debugPrint('[Groups] joinCircle Postgrest ${e.code}: ${e.message}');
+    if (isStaleAuthError(e)) {
+      await clearStaleAuthSession(
+        ref,
+        client,
+        reason: 'joinCircle failed with stale auth: $e',
+      );
+    }
+    return false;
+  } on AuthException catch (e) {
+    debugPrint('[Groups] joinCircle auth: $e');
+    if (isStaleAuthError(e)) {
+      await clearStaleAuthSession(
+        ref,
+        client,
+        reason: 'joinCircle auth failed: $e',
+      );
+    }
+    return false;
+  } catch (e) {
+    debugPrint('[Groups] joinCircle error: $e');
     // RPC raises 'Invalid invite code' / 'Authentication required' on failure.
     return false;
   }

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/analytics.dart';
+import '../../dhikr/providers/dhikr_provider.dart';
 
 class StreakState {
   final int currentStreak;
@@ -28,27 +29,41 @@ class StreakState {
 }
 
 class StreakNotifier extends StateNotifier<StreakState> {
-  StreakNotifier() : super(const StreakState()) {
+  StreakNotifier(this._ref) : super(const StreakState()) {
     _load();
+    // Keep lifetimeTotal reactive: any time the user taps the counter, adds
+    // a group, resets, etc., dhikrProvider emits a new state and we recompute
+    // the total so Profile / Streak screen don't show stale numbers.
+    _ref.listen<DhikrState>(dhikrProvider, (_, next) {
+      _refreshLifetimeTotal(next);
+    });
   }
+
+  final Ref _ref;
 
   void _load() {
     final box = Hive.box('dhikr_sessions');
 
-    // Load counter groups to calculate total
+    // Load counter groups to calculate total. Defensive: list items may be
+    // anything if Hive was edited externally / corrupted. Skip non-Map items
+    // and missing/non-int 'count' fields rather than throwing on .[] access.
     final saved = box.get('counter_groups');
     int total = 0;
-    if (saved != null && saved is List) {
+    if (saved is List) {
       for (final g in saved) {
-        total += (g['count'] as int? ?? 0);
+        if (g is Map) {
+          final c = g['count'];
+          if (c is int) total += c;
+        }
       }
     }
 
-    // Load active dates
+    // Load active dates. Same defensive parse — drop non-stringable items.
     final dates = box.get('active_dates');
     final Set<String> activeDates = {};
-    if (dates != null && dates is List) {
+    if (dates is List) {
       for (final d in dates) {
+        if (d == null) continue;
         activeDates.add(d.toString());
       }
     }
@@ -126,8 +141,14 @@ class StreakNotifier extends StateNotifier<StreakState> {
     Analytics.streakDay2IfNew(streak);
   }
 
-  /// Refresh totals from counter data
-  void refreshTotal(int total) {
+  /// Recompute lifetimeTotal from a (just-mutated) dhikr state. Called by
+  /// the ref.listen on dhikrProvider above; cheap because it's just a sum.
+  void _refreshLifetimeTotal(DhikrState dhikr) {
+    int total = 0;
+    for (final g in dhikr.groups) {
+      total += g.count;
+    }
+    if (total == state.lifetimeTotal) return;
     state = StreakState(
       currentStreak: state.currentStreak,
       longestStreak: state.longestStreak,
@@ -158,5 +179,5 @@ class StreakNotifier extends StateNotifier<StreakState> {
 }
 
 final streakProvider = StateNotifierProvider<StreakNotifier, StreakState>((ref) {
-  return StreakNotifier();
+  return StreakNotifier(ref);
 });
