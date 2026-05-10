@@ -127,16 +127,18 @@ class ZikrSkins {
     accent: Color(0xFFC5A76D),
     accentLight: Color(0xFFD9C08C),
     accentSoft: Color(0xFFFDF5E8),
-    // Surfaces — warm champagne cream
-    surface: Color(0xFFFAF2EE),
-    surfaceWarm: Color(0xFFF4E6DF),
-    surfaceCard: Color(0xFFFFF8F5),
-    // Text — warm brown, not cold gray
-    ink: Color(0xFF2C1F1A),
-    inkSoft: Color(0xFF7A6459),
-    inkMuted: Color(0xFFB8A198),
-    // Dividers — champagne whisper
-    divider: Color(0xFFF2E4DD),
+    // Surfaces — warm cream, desaturated from dusty pink for legibility
+    // (5/7 phone-test fix: previous #FAF2EE read as "too pink" on OLED).
+    surface: Color(0xFFFBF6F3),
+    surfaceWarm: Color(0xFFF2EAE5),
+    surfaceCard: Color(0xFFFFFCFA),
+    // Text — warm brown, deepened for AA-grade contrast on warm surface.
+    // (5/7 phone-test fix: previous ink/inkSoft/inkMuted read as "too faint".)
+    ink: Color(0xFF1A100C),
+    inkSoft: Color(0xFF4A3D36),
+    inkMuted: Color(0xFF7A6459),
+    // Dividers — slightly more visible than the old champagne whisper
+    divider: Color(0xFFE8DCD4),
     tapGlow: Color(0xFFE8B5B9),
     error: Color(0xFFCC3D3D),
     patternOpacity: 0.025,
@@ -154,7 +156,7 @@ class ZikrSkins {
     name: 'Pink Sand',
     nameAr: 'رمال وردية',
     description: 'Bright rose. Dawn over Wadi Rum.',
-    isFree: true, // TODO: set false after preview
+    isFree: false, // paid via Google Play IAP
     priceUsd: 1.99,
     primary: Color(0xFFEEB7C3),
     primaryLight: Color(0xFFF4CDD6),
@@ -185,7 +187,7 @@ class ZikrSkins {
     name: 'Misty Rose',
     nameAr: 'ضباب الورد',
     description: 'Lavender pink. Soft and dreamy.',
-    isFree: true, // TODO: set false after preview
+    isFree: false, // paid via Google Play IAP
     priceUsd: 1.99,
     primary: Color(0xFFF8CDED),
     primaryLight: Color(0xFFFBDDF3),
@@ -216,7 +218,7 @@ class ZikrSkins {
     name: 'Mint Fog',
     nameAr: 'نعناع الضباب',
     description: 'Fresh mint. Cool and calm.',
-    isFree: true, // TODO: set false after preview
+    isFree: false, // paid via Google Play IAP
     priceUsd: 1.99,
     primary: Color(0xFFC6F0E0),
     primaryLight: Color(0xFFD8F5EA),
@@ -247,7 +249,7 @@ class ZikrSkins {
     name: 'Haze Lilac',
     nameAr: 'ضباب أرجواني',
     description: 'Soft lilac. Twilight sky.',
-    isFree: true, // TODO: set false after preview
+    isFree: false, // paid via Google Play IAP
     priceUsd: 1.99,
     primary: Color(0xFFD6CEF8),
     primaryLight: Color(0xFFE2DCFB),
@@ -278,7 +280,7 @@ class ZikrSkins {
     name: 'Pearl Mist',
     nameAr: 'ضباب اللؤلؤ',
     description: 'Soft cream pink. Gulf morning mist.',
-    isFree: true, // TODO: set false after preview
+    isFree: false, // paid via Google Play IAP
     priceUsd: 1.99,
     primary: Color(0xFFE7C9CF),
     primaryLight: Color(0xFFF0DAE0),
@@ -309,7 +311,7 @@ class ZikrSkins {
     name: 'Ruby Petals',
     nameAr: 'بتلات الياقوت',
     description: 'Deep berry. Bold and warm.',
-    isFree: true, // TODO: set false after preview
+    isFree: false, // paid via Google Play IAP
     priceUsd: 1.99,
     primary: Color(0xFFA55166),
     primaryLight: Color(0xFFBE7585),
@@ -359,25 +361,38 @@ class SkinNotifier extends StateNotifier<ZikrSkin> {
     state = skin;
     Hive.box('settings').put('skin_id', skin.id);
   }
-
-  bool isOwned(ZikrSkin skin) {
-    if (skin.isFree) return true;
-    final box = Hive.box('settings');
-    final owned = box.get('owned_skins', defaultValue: <String>[]);
-    return (owned as List).contains(skin.id);
-  }
-
-  void unlock(String skinId) {
-    final box = Hive.box('settings');
-    final owned =
-        List<String>.from(box.get('owned_skins', defaultValue: <String>[]) as List);
-    if (!owned.contains(skinId)) {
-      owned.add(skinId);
-      box.put('owned_skins', owned);
-    }
-  }
 }
 
 final skinProvider = StateNotifierProvider<SkinNotifier, ZikrSkin>((ref) {
   return SkinNotifier();
+});
+
+/// Reactive set of skin ids the user owns. Separate from [skinProvider] so
+/// the skin selector and any owned-state UI rebuild the moment IAP unlocks
+/// or restores a skin — previously `unlock()` only wrote Hive and the UI
+/// stayed visually locked until manual rebuild.
+class OwnedSkinsNotifier extends StateNotifier<Set<String>> {
+  OwnedSkinsNotifier() : super(const {}) {
+    _load();
+  }
+
+  void _load() {
+    final box = Hive.box('settings');
+    final raw = box.get('owned_skins', defaultValue: <String>[]) as List;
+    state = raw.map((e) => e.toString()).toSet();
+  }
+
+  void unlock(String skinId) {
+    if (state.contains(skinId)) return;
+    final updated = {...state, skinId};
+    state = updated;
+    Hive.box('settings').put('owned_skins', updated.toList());
+  }
+
+  bool isOwned(ZikrSkin skin) => skin.isFree || state.contains(skin.id);
+}
+
+final ownedSkinsProvider =
+    StateNotifierProvider<OwnedSkinsNotifier, Set<String>>((ref) {
+  return OwnedSkinsNotifier();
 });

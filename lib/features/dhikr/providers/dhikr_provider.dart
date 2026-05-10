@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -14,7 +15,11 @@ class DhikrState {
     this.activeIndex = 0,
   });
 
-  CounterGroup get active => groups[activeIndex];
+  CounterGroup get active {
+    if (groups.isEmpty) return defaultGroups().first;
+    final idx = activeIndex.clamp(0, groups.length - 1);
+    return groups[idx];
+  }
 
   int get dailyTotal {
     int total = 0;
@@ -52,8 +57,8 @@ class DhikrNotifier extends StateNotifier<DhikrState> {
         if (groups.isNotEmpty) {
           state = DhikrState(groups: groups);
         }
-      } catch (_) {
-        // Corrupted data, use defaults
+      } catch (e) {
+        debugPrint('[Dhikr] Corrupted Hive counter_groups, using defaults: $e');
       }
     }
   }
@@ -117,22 +122,32 @@ class DhikrNotifier extends StateNotifier<DhikrState> {
     _persist();
   }
 
-  /// Add a new group (max 5)
-  void addGroup(String name) {
-    if (state.groups.length >= 5) return;
+  /// Add a new group (max 5). Trims and clamps the name; rejects empty.
+  /// Returns true if the group was added.
+  bool addGroup(String name) {
+    if (state.groups.length >= 5) return false;
+    final cleaned = name.trim();
+    if (cleaned.isEmpty) return false;
+    final clamped =
+        cleaned.length > 30 ? cleaned.substring(0, 30) : cleaned;
     final newGroup = CounterGroup(
       id: 'g${DateTime.now().millisecondsSinceEpoch}',
-      name: name,
+      name: clamped,
     );
     final updated = [...state.groups, newGroup];
     state = DhikrState(groups: updated, activeIndex: updated.length - 1);
     _persist();
+    return true;
   }
 
-  /// Rename a group
+  /// Rename a group. Same trim/clamp/empty rules as addGroup.
   void renameGroup(int index, String newName) {
     if (index < 0 || index >= state.groups.length) return;
-    state.groups[index].name = newName;
+    final cleaned = newName.trim();
+    if (cleaned.isEmpty) return;
+    final clamped =
+        cleaned.length > 30 ? cleaned.substring(0, 30) : cleaned;
+    state.groups[index].name = clamped;
     state = state.copyWith(groups: [...state.groups]);
     _persist();
   }

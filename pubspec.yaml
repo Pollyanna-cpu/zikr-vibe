@@ -1,7 +1,7 @@
 name: zikr_vibe
 description: Count your dhikr. Nothing else watches.
 publish_to: 'none'
-version: 1.0.0+2
+version: 1.0.12+14
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -35,6 +35,9 @@ dependencies:
   sign_in_with_apple: ^6.1.0
   google_sign_in: ^6.2.1
   crypto: ^3.0.3
+
+  # In-App Purchase (Google Play IAP for skin monetization)
+  in_app_purchase: ^3.2.0
 
   # Firebase — add back when config files are ready:
   #   Android: android/app/google-services.json

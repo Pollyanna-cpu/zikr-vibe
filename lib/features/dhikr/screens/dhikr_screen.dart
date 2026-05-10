@@ -11,6 +11,8 @@ import '../models/counter_group.dart';
 import '../../streak/providers/streak_provider.dart';
 import '../../streak/screens/streak_screen.dart';
 
+final dhikrWakelockEnabledProvider = Provider<bool>((ref) => true);
+
 class DhikrScreen extends ConsumerStatefulWidget {
   const DhikrScreen({super.key});
 
@@ -61,7 +63,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
     );
 
     // Keep screen awake during dhikr
-    if (!kIsWeb) {
+    if (!kIsWeb && ref.read(dhikrWakelockEnabledProvider)) {
       WakelockPlus.enable();
     }
   }
@@ -71,7 +73,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
     _tapController.dispose();
     _rippleController.dispose();
     _countController.dispose();
-    if (!kIsWeb) {
+    if (!kIsWeb && ref.read(dhikrWakelockEnabledProvider)) {
       WakelockPlus.disable();
     }
     super.dispose();
@@ -127,8 +129,8 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                     height: 300 * _rippleSize.value,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: skin.tapGlow
-                          .withValues(alpha: _rippleOpacity.value),
+                      color:
+                          skin.tapGlow.withValues(alpha: _rippleOpacity.value),
                     ),
                   ),
                 );
@@ -206,7 +208,9 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                               style: GoogleFonts.inter(
                                 fontSize: 120,
                                 fontWeight: FontWeight.w700,
-                                color: ref.read(dhikrProvider.notifier).isAtMilestone
+                                color: ref
+                                        .read(dhikrProvider.notifier)
+                                        .isAtMilestone
                                     ? skin.accent
                                     : skin.ink,
                                 height: 1,
@@ -229,7 +233,8 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                   GestureDetector(
                     onTap: () {
                       // Navigate to streak screen
-                      Navigator.push(context,
+                      Navigator.push(
+                        context,
                         MaterialPageRoute(builder: (_) => const StreakScreen()),
                       );
                     },
@@ -244,7 +249,8 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                             if (streak.currentStreak > 0) {
                               return Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 6,
+                                  horizontal: 14,
+                                  vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
                                   color: skin.primarySoft,
@@ -253,10 +259,12 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Text('🔥', style: TextStyle(fontSize: 14)),
+                                    const Text('🔥',
+                                        style: TextStyle(fontSize: 14)),
                                     const SizedBox(width: 6),
                                     Text(
-                                      AppLocalizations.of(context).dayStreak(streak.currentStreak),
+                                      AppLocalizations.of(context)
+                                          .dayStreak(streak.currentStreak),
                                       style: GoogleFonts.inter(
                                         fontSize: 13,
                                         color: skin.primary,
@@ -272,7 +280,8 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
                           const SizedBox(height: 6),
                           if (dhikr.dailyTotal > 0)
                             Text(
-                              AppLocalizations.of(context).todayTotal(dhikr.dailyTotal),
+                              AppLocalizations.of(context)
+                                  .todayTotal(dhikr.dailyTotal),
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 color: skin.inkMuted,
@@ -408,7 +417,9 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
-          24, 24, 24,
+          24,
+          24,
+          24,
           MediaQuery.of(ctx).viewInsets.bottom + 24,
         ),
         child: Column(
@@ -439,18 +450,21 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
               controller: controller,
               autofocus: true,
               textCapitalization: TextCapitalization.words,
+              maxLength: 30,
               style: GoogleFonts.inter(fontSize: 16),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context).counterHint,
                 hintStyle: GoogleFonts.inter(color: skin.inkMuted),
                 filled: true,
                 fillColor: skin.surface,
+                counterText: '',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 14,
+                  horizontal: 16,
+                  vertical: 14,
                 ),
               ),
             ),
@@ -673,8 +687,7 @@ class _IslamicPatternPainter extends CustomPainter {
   }
 
   /// A 6-petal rosette using quadratic Bézier curves.
-  void _drawRosette(
-      Canvas canvas, Offset center, double radius, Paint paint) {
+  void _drawRosette(Canvas canvas, Offset center, double radius, Paint paint) {
     final path = Path();
     const petals = 6;
     for (int i = 0; i < petals; i++) {

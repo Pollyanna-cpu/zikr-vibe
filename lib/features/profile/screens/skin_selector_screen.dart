@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/skin.dart';
+import '../../iap/iap_service.dart';
 
 class SkinSelectorScreen extends ConsumerWidget {
   const SkinSelectorScreen({super.key});
@@ -10,7 +11,9 @@ class SkinSelectorScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(skinProvider);
-    final notifier = ref.read(skinProvider.notifier);
+    final ownedNotifier = ref.watch(ownedSkinsProvider.notifier);
+    // Watching the set rebuilds this screen instantly when IAP unlocks a skin.
+    ref.watch(ownedSkinsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Appearance')),
@@ -21,14 +24,27 @@ class SkinSelectorScreen extends ConsumerWidget {
         itemBuilder: (context, index) {
           final skin = ZikrSkins.all[index];
           final isSelected = skin.id == current.id;
-          final owned = notifier.isOwned(skin);
+          final owned = ownedNotifier.isOwned(skin);
 
           return GestureDetector(
-            onTap: () {
+            onTap: () async {
               if (owned) {
-                notifier.select(skin);
+                ref.read(skinProvider.notifier).select(skin);
+              } else {
+                // Paid skin — launch Google Play IAP purchase flow
+                final iap = ref.read(iapServiceProvider);
+                final ok = await iap.buySkin(skin.id);
+                if (!ok && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Purchase unavailable. Try again or restore from Profile.',
+                      ),
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
               }
-              // TODO: paid skins → IAP flow
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),

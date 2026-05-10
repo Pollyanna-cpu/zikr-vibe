@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -25,6 +27,15 @@ class NotificationService {
         iOS: iosSettings,
       ),
     );
+
+    // Android 13+ (API 33) requires explicit POST_NOTIFICATIONS runtime
+    // permission — without it, scheduled prayer reminders silently no-op.
+    if (!kIsWeb && Platform.isAndroid) {
+      await _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
+    }
 
     _initialized = true;
   }

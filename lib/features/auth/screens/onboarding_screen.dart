@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/auth_prefs.dart';
 import '../../../core/skin.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -51,7 +52,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Align(
               alignment: Alignment.topRight,
               child: TextButton(
-                onPressed: () => context.go('/dhikr'),
+                onPressed: () {
+                  markOnboardingSeen(ref);
+                  context.go('/dhikr');
+                },
                 child: const Text('Skip'),
               ),
             ),
@@ -76,9 +80,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   width: _currentPage == i ? 24 : 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: _currentPage == i
-                        ? skin.primary
-                        : skin.divider,
+                    color: _currentPage == i ? skin.primary : skin.divider,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -100,13 +102,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         curve: Curves.easeInOut,
                       );
                     } else {
+                      markOnboardingSeen(ref);
                       context.go('/dhikr');
                     }
                   },
                   child: Text(
-                    _currentPage == pages.length - 1
-                        ? 'Get Started'
-                        : 'Next',
+                    _currentPage == pages.length - 1 ? 'Get Started' : 'Next',
                   ),
                 ),
               ),

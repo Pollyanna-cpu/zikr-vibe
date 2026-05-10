@@ -37,30 +37,27 @@ class AuthService {
     );
   }
 
-  /// Sign up with email and password
+  /// Sign up with email and password.
+  ///
+  /// `data['display_name']` lands in `auth.users.raw_user_meta_data`, where
+  /// the `handle_new_user()` AFTER INSERT trigger reads it to auto-populate
+  /// `public.users` / `public.streaks` / `public.notification_prefs`. The
+  /// trigger runs as `SECURITY DEFINER` so it bypasses RLS — much cleaner
+  /// than upserting from the client right after signUp returned, where
+  /// `auth.uid()` may not yet be set on the new session and the RLS
+  /// `WITH CHECK (auth.uid() = id)` policy rejects the row (PostgrestException
+  /// 42501). Don't mirror the trigger here.
   Future<AuthResponse> signUpWithEmail(
     String email,
     String password,
     String displayName,
   ) async {
     if (_client == null) throw Exception('Supabase not configured');
-    final response = await _client.auth.signUp(
+    return await _client.auth.signUp(
       email: email,
       password: password,
       data: {'display_name': displayName},
     );
-
-    // Create user profile in our table
-    if (response.user != null) {
-      await _client.from('users').upsert({
-        'id': response.user!.id,
-        'email': email,
-        'display_name': displayName,
-        'auth_provider': 'email',
-      });
-    }
-
-    return response;
   }
 
   /// Sign in with Google
