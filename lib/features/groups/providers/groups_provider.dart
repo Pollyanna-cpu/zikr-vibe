@@ -141,7 +141,6 @@ Future<String?> createCircle(
 Future<bool> joinCircle(
   dynamic ref,
   SupabaseClient client,
-  String userId,
   String code,
 ) async {
   try {

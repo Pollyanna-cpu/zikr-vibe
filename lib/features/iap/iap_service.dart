@@ -13,7 +13,7 @@ import '../../core/skin.dart';
 /// - On purchased: SkinNotifier.unlock(skinId) + auto-deliver
 /// - Restore: queryPastPurchases() → unlock all owned
 ///
-/// Product IDs match Google Play Console SKU (set by Yun in Console):
+/// Product IDs match Google Play Console SKU (set by the app admin in Play Console):
 ///   skin.pink_sand
 ///   skin.misty_rose
 ///   skin.mint_fog
@@ -71,7 +71,7 @@ class IapService {
 
     final response = await _iap.queryProductDetails({sku});
     if (response.notFoundIDs.isNotEmpty) {
-      debugPrint('[IAP] SKU not found: $sku — Yun must add in Play Console');
+      debugPrint('[IAP] SKU not found: $sku — the app admin must add it in Play Console');
       return false;
     }
     if (response.productDetails.isEmpty) return false;

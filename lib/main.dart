@@ -53,7 +53,7 @@ void main() async {
 
       // Validate any cached session against the server. The Flutter SDK
       // restores the last user object from secure storage on init, but if
-      // the refresh token has been revoked / expired (Yun 4/13 -> 5/8 case),
+      // the refresh token has been revoked / expired (the 4/13 -> 5/8 case),
       // the cached session is a zombie: UI shows currentUser != null but
       // every request is rejected by RLS as anon. Force-refresh - if it
       // fails, sign out so currentUser becomes null and the router pushes
