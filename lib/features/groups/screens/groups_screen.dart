@@ -53,7 +53,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
     // User is signed in — now it's safe to consume and join.
     _consumedPending = true;
     DeepLinks.takePending();
-    final ok = await joinCircle(ref, client, user.id, code);
+    final ok = await joinCircle(ref, client, code);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -314,7 +314,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                   final user = ref.read(currentUserProvider);
                   if (client == null || user == null) return;
 
-                  final success = await joinCircle(ref, client, user.id, code);
+                  final success = await joinCircle(ref, client, code);
                   if (!ctx.mounted) return;
                   Navigator.pop(ctx);
 
