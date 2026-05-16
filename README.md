@@ -31,3 +31,12 @@ flutter run
 - GoRouter (navigation)
 - Hive (local storage)
 - WakelockPlus (screen awake during dhikr)
+
+## Hook setup (one-time, per dev environment)
+
+```bash
+git config core.hooksPath .githooks
+chmod +x .githooks/*
+```
+
+Enables a pre-push reminder to write Notion Run entries after each push. See [CLAUDE.md](./CLAUDE.md) for the worklog protocol.
