@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Soft reminder — does NOT block push. See CLAUDE.md for context.
+# Upgrade to hard enforcement (Run-URL: trailer check) if worklog gaps recur.
+cat <<'EOF'
+
+================================================
+  REMINDER: write Run to Notion after push lands.
+  DB: Runs · 任务/调度 (CC与Codex的YUN cockpit)
+  ID: 34b3a237-d353-8006-9ff6-000b438d9cb7
+
+  Required fields:
+    Title / Brief / Executor / Mode
+    Status=done / Output=commit URL
+
+  Why: 5 漏写已复现 (5/2, 5/3×4, 5/10, 5/13×4, 5/15×2)
+       Manual backfill is expensive.
+
+  See CLAUDE.md for full schema + example.
+================================================
+
+EOF
+sleep 2
+exit 0
