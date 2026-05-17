@@ -1,7 +1,38 @@
 # Zikr Vibe — App Store & Google Play Listing Copy
 
-**Last updated**: 2026-04-02
-**Status**: Ready for submission
+**Last updated**: 2026-05-18
+**Status**: v1.0.12 production-ready (Google Play); iOS deferred (Apple Dev not purchased)
+
+> **fastlane sync (2026-05-18)**: `android/fastlane/metadata/android/en-US/` has been brought in line with this doc — `title.txt`, `short_description.txt`, `full_description.txt`, and `changelogs/14.txt` (v1.0.12+14) are all current. Yun may paste these straight into Play Console listing edit.
+>
+> **Privacy + Terms LIVE**: `https://app.zikrvibe.com/privacy` (V2.0, eff. 2026-05-02) + `https://app.zikrvibe.com/terms` (eff. 2026-05-18, pending push of `web/terms/index.html`).
+
+---
+
+## v1.0.12 Production Release Notes (2026-05-18)
+
+Source-of-truth: `android/fastlane/metadata/android/en-US/changelogs/14.txt`.
+
+```
+v1.0.12 — Hardening release
+
+• Dhikr Circles: rebuilt invite + join flow, fixed a crash when joining via invite code
+• Sign-in: gracefully recovers if your session expires while the app is open
+• Prayer time reminders: more reliable scheduling for the times you opted in to
+• Streak: persists through restarts, short network outages, and battery deaths
+• Stability fixes across counter, calendar, and Circles screens
+• Updated Privacy Policy and added Terms of Service
+
+Privacy by design: your dhikr counts stay on your device.
+```
+
+What changed under the hood since the v1.0 listing copy below was written:
+- `create_circle` RPC now `SECURITY DEFINER` (6 migrations applied to Supabase `ocxnevqgjiyhwdfpskfc`)
+- Zombie auth session recovery (gracefully retries on expired session instead of locking the user out)
+- Prayer notification scheduler hardened (no duplicate fires, no missed fires on cold start)
+- Streak persistence with mercy day logic
+- 8 hand-tuned skins (Dusty Rose, Mosque Green, Gold, ...)
+- Deep link intent filter scaffolding for `https://zikrvibe.com/join/<code>` (autoVerify pending Shopify `assetlinks.json` deploy — out of scope for v1.0.12 listing)
 
 ---
 
