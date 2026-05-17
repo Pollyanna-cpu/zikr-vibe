@@ -1,0 +1,10 @@
+v1.0.12 — Hardening
+
+• Dhikr Circles: invite + join flow rebuilt, crash fixed
+• Sign-in: recovers gracefully if your session expires
+• Prayer reminders: more reliable scheduling
+• Streak: persists through restarts + outages
+• Stability fixes across counter, calendar, Circles
+• Updated Privacy Policy + new Terms of Service
+
+Your dhikr counts stay on your device.
