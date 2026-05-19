@@ -78,6 +78,26 @@ class AuthService {
     );
   }
 
+  /// Delete the current user's server-side account data, then sign out.
+  ///
+  /// Calls the `delete_account` SECURITY DEFINER RPC (see migration
+  /// `007_delete_account_rpc.sql`) which removes the caller's row from
+  /// `public.users` and cascades to `daily_presence`, `streaks`,
+  /// `memberships`, and `notification_prefs`. The `auth.users` row is
+  /// not removed — Supabase doesn't expose that to client SDKs — so the
+  /// email cannot be reused for a fresh signup until support deletes the
+  /// auth row. This matches what the privacy policy and Play Data Safety
+  /// form promise: "Deleting your account removes profile, daily presence
+  /// history, streaks, notification preferences, and Circle memberships."
+  ///
+  /// signOut is called after the RPC so the auth state listener routes
+  /// the user back to /login.
+  Future<void> deleteAccount() async {
+    if (_client == null) throw Exception('Supabase not configured');
+    await _client.rpc('delete_account');
+    await _client.auth.signOut();
+  }
+
   /// Sign out
   Future<void> signOut() async {
     await _client?.auth.signOut();

@@ -9,6 +9,54 @@ import '../../streak/providers/streak_provider.dart';
 import '../../groups/providers/groups_provider.dart';
 import 'skin_selector_screen.dart';
 
+/// Account deletion confirm dialog + RPC dispatch.
+///
+/// Required by Play Console Data Safety: the form (and the privacy
+/// policy at app.zikrvibe.com/privacy §8) promises an in-app
+/// "Settings → Delete Account" path. The actual delete is the
+/// `delete_account` RPC defined in migration 007.
+Future<void> _confirmDeleteAccount(
+    BuildContext context, WidgetRef ref, ZikrSkin skin) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Delete Account'),
+      content: const Text(
+        'This permanently removes your profile, daily presence history, '
+        'streaks, notification settings, and Circle memberships. '
+        'On-device dhikr counts are removed when you uninstall the app. '
+        'This cannot be undone.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: TextButton.styleFrom(foregroundColor: skin.error),
+          child: const Text('Delete'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+
+  try {
+    await ref.read(authServiceProvider).deleteAccount();
+    // signOut inside deleteAccount() triggers authStateProvider → router
+    // redirect to /login. Clear the optional skipped-auth flag too in
+    // case the user toggled "Use without account" before this.
+    resetSkippedAuth(ref);
+    if (context.mounted) context.go('/login');
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Delete failed: $e')),
+    );
+  }
+}
+
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -143,6 +191,12 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 );
               },
+            ),
+            _SettingsTile(
+              icon: Icons.delete_forever_rounded,
+              label: 'Delete Account',
+              skin: skin,
+              onTap: () => _confirmDeleteAccount(context, ref, skin),
             ),
 
             const SizedBox(height: 32),
