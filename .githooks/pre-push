@@ -1,23 +1,84 @@
 #!/usr/bin/env bash
-# Soft reminder — does NOT block push. See CLAUDE.md for context.
-# Upgrade to hard enforcement (Run-URL: trailer check) if worklog gaps recur.
-cat <<'EOF'
+# Hard enforcement — reject push if any commit being pushed lacks the
+#   Run-URL: https://www.notion.so/<page-id>
+# trailer line. Soft reminder rolled out 2026-05-16 produced 12 missed Runs
+# over 4 days (5/2, 5/3×4, 5/10, 5/13×4, 5/15×2, plus 5/20 Codex 7e3f6ef),
+# upgraded to B (hard block) on 2026-05-20 per Yun directive.
+#
+# Bypass: `git push --no-verify`. Use only when Yun explicitly authorizes,
+# and write the missing Run row manually right after.
+#
+# Trailer convention (one line, last paragraph of the commit message):
+#   Run-URL: https://www.notion.so/<page-id>
+#
+# Workflow:
+#   1. Write the Notion Run page first (DB 34b3a237-d353-8006-9ff6-000b438d9cb7).
+#   2. Copy its URL into the commit message footer:
+#        git commit -m "<subject>" -m "<body>" -m "Run-URL: https://www.notion.so/..."
+#      or after the fact:
+#        git commit --amend  # then add the trailer line
+#   3. git push.
 
-================================================
-  REMINDER: write Run to Notion after push lands.
-  DB: Runs · 任务/调度 (CC与Codex的YUN cockpit)
-  ID: 34b3a237-d353-8006-9ff6-000b438d9cb7
+set -e
 
-  Required fields:
-    Title / Brief / Executor / Mode
-    Status=done / Output=commit URL
+zero='0000000000000000000000000000000000000000'
+violations=0
+violating_shas=()
 
-  Why: 5 漏写已复现 (5/2, 5/3×4, 5/10, 5/13×4, 5/15×2)
-       Manual backfill is expensive.
+while IFS=' ' read -r local_ref local_sha remote_ref remote_sha; do
+  # Branch deletion — nothing to inspect.
+  [ "$local_sha" = "$zero" ] && continue
 
-  See CLAUDE.md for full schema + example.
-================================================
+  # First push to a brand-new branch: inspect every commit not yet on any remote.
+  if [ "$remote_sha" = "$zero" ]; then
+    range=$(git rev-list "$local_sha" --not --remotes 2>/dev/null || true)
+  else
+    range=$(git rev-list "${remote_sha}..${local_sha}" 2>/dev/null || true)
+  fi
 
-EOF
-sleep 2
+  for sha in $range; do
+    msg=$(git log -1 --format=%B "$sha")
+    if ! printf '%s' "$msg" | grep -qE '^Run-URL:[[:space:]]+https://www\.notion\.so/'; then
+      violations=$((violations + 1))
+      violating_shas+=("$sha")
+    fi
+  done
+done
+
+if [ "$violations" -gt 0 ]; then
+  {
+    echo
+    echo "================================================"
+    echo "  ❌ PUSH REJECTED — $violations commit(s) missing Run-URL trailer."
+    echo
+    echo "  Offending commits:"
+    for sha in "${violating_shas[@]}"; do
+      printf '    %s\n' "$(git log -1 --format='%h  %s' "$sha")"
+    done
+    echo
+    echo "  Every commit must end with a footer line:"
+    echo "    Run-URL: https://www.notion.so/<page-id>"
+    echo
+    echo "  Fix:"
+    echo "    1. Write the Notion Run page (Runs DB"
+    echo "       34b3a237-d353-8006-9ff6-000b438d9cb7) and copy its URL."
+    echo "    2. Amend the commit message:"
+    echo "         git commit --amend"
+    echo "       and add the trailer at the bottom."
+    echo "       For older commits, use:"
+    echo "         git rebase -i <base>   # reword each offender"
+    echo "    3. git push (no --no-verify)."
+    echo
+    echo "  Bypass only if Yun explicitly authorizes:"
+    echo "    git push --no-verify"
+    echo "  …then write the missing Run row manually immediately after."
+    echo
+    echo "  Why hard-block: 12 漏写复现 (5/2, 5/3×4, 5/10, 5/13×4, 5/15×2, 5/20)."
+    echo "  Soft reminder shipped 5/16 — failed in 4 days."
+    echo "================================================"
+    echo
+  } >&2
+  exit 1
+fi
+
 exit 0
