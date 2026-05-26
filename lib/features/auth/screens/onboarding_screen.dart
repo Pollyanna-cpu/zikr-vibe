@@ -29,7 +29,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
       _OnboardingPage(
         icon: Icons.touch_app_rounded,
-        title: 'Your worship is sacred',
+        title: 'Your dhikr is private',
         subtitle:
             'Tap to count. Feel the vibration at 33, 66, 99.\nClose your eyes. No phone distraction.',
         color: skin.primary,

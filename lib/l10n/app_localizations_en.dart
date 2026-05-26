@@ -90,7 +90,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get yourJourney => 'Your Journey';
+  String get yourJourney => 'Your Stats';
 
   @override
   String get customTarget => 'Custom target';

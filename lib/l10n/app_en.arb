@@ -38,7 +38,7 @@
     "placeholders": {"count": {"type": "int"}}
   },
 
-  "yourJourney": "Your Journey",
+  "yourJourney": "Your Stats",
   "customTarget": "Custom target",
   "appearance": "Appearance",
   "dhikrCircles": "Dhikr Circles",
