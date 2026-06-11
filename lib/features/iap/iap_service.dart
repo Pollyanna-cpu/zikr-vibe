@@ -118,11 +118,21 @@ class IapService {
         if (_kSkinSkus.contains(sku)) {
           final skinId = skinIdFromSku(sku);
           _ref.read(ownedSkinsProvider.notifier).unlock(skinId);
+          if (p.status == PurchaseStatus.purchased) {
+            // Auto-deliver: the user just paid for this skin — apply it now
+            // instead of leaving it locked-looking until a second tap.
+            // Restores deliberately don't switch the active skin.
+            _ref.read(skinProvider.notifier).select(ZikrSkins.byId(skinId));
+            _ref.read(iapEventProvider.notifier).state =
+                IapEvent.purchased(skinId);
+          }
           debugPrint('[IAP] Unlocked skin: $skinId (status=${p.status})');
         }
       } else if (p.status == PurchaseStatus.error) {
+        _ref.read(iapEventProvider.notifier).state = IapEvent.error();
         debugPrint('[IAP] Purchase error: ${p.error}');
       } else if (p.status == PurchaseStatus.canceled) {
+        _ref.read(iapEventProvider.notifier).state = IapEvent.canceled();
         debugPrint('[IAP] Purchase canceled: ${p.productID}');
       }
 
@@ -138,3 +148,21 @@ final iapServiceProvider = Provider<IapService>((ref) {
   ref.onDispose(service.dispose);
   return service;
 });
+
+/// One-shot user-visible purchase outcome, for snackbars.
+/// The purchase stream lives in [IapService] (no BuildContext); UI screens
+/// `ref.listen` to this instead — previously canceled/failed purchases gave
+/// zero feedback and the user just saw nothing happen.
+class IapEvent {
+  final String kind; // 'purchased' | 'canceled' | 'error'
+  final String? skinId;
+  // Each event is a fresh instance on purpose: StateProvider only notifies
+  // when the value changes, so a shared const instance would swallow the
+  // second cancel-in-a-row.
+  IapEvent._(this.kind, [this.skinId]);
+  factory IapEvent.purchased(String skinId) => IapEvent._('purchased', skinId);
+  factory IapEvent.canceled() => IapEvent._('canceled');
+  factory IapEvent.error() => IapEvent._('error');
+}
+
+final iapEventProvider = StateProvider<IapEvent?>((ref) => null);

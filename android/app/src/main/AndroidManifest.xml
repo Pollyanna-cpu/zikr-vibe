@@ -39,6 +39,30 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="io.supabase.zikrvibe" android:host="login-callback" />
             </intent-filter>
+            <!-- App Link: https://zikrvibe.com/join/<INVITE_CODE> opens the app
+                 directly. autoVerify=true requires the Digital Asset Links file
+                 at https://zikrvibe.com/.well-known/assetlinks.json (pending
+                 Shopify deploy + Play Console signing SHA-256). Until verified,
+                 Android 12+ opens these links in the browser; Android 11 and
+                 below show a disambiguation dialog. Path prefix /join/ keeps
+                 zikrvibe.com root browsable in the browser. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="zikrvibe.com" android:pathPrefix="/join/" />
+                <data android:scheme="https" android:host="www.zikrvibe.com" android:pathPrefix="/join/" />
+            </intent-filter>
+            <!-- Custom scheme fallback: zikrvibe://join/<INVITE_CODE>. Works
+                 without any server-side verification file — lib/core/deep_links.dart
+                 already parses this scheme but no filter existed, so the OS never
+                 delivered it to the app. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="zikrvibe" android:host="join" />
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

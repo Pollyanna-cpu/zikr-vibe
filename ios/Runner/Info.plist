@@ -78,6 +78,10 @@
 				<key>CFBundleURLSchemes</key>
 				<array>
 					<string>io.supabase.zikrvibe</string>
+					<!-- Circle invite deep link: zikrvibe://join/<CODE>.
+					     Parity with the Android intent-filter; without it iOS
+					     never delivers invite links to deep_links.dart. -->
+					<string>zikrvibe</string>
 				</array>
 			</dict>
 		</array>

@@ -441,7 +441,7 @@ class _ReminderToggle extends ConsumerWidget {
           ),
           Switch(
             value: enabled,
-            activeColor: skin.primary,
+            activeThumbColor: skin.primary,
             onChanged: (val) async {
               Hive.box('settings').put('prayer_reminders_enabled', val);
               ref.read(prayerRemindersEnabledProvider.notifier).state = val;

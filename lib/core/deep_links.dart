@@ -57,7 +57,13 @@ class DeepLinks {
     final isOurScheme = uri.scheme == _scheme;
     if (!isOurHost && !isOurScheme) return null;
 
-    final segments = uri.pathSegments;
+    // In zikrvibe://join/<CODE> the URI parser reads 'join' as the host,
+    // not a path segment — without re-adding it the lookup below never
+    // matched and every custom-scheme invite was dropped.
+    final segments = [
+      if (isOurScheme && uri.host == 'join') 'join',
+      ...uri.pathSegments,
+    ];
     final joinIdx = segments.indexOf('join');
     if (joinIdx == -1 || joinIdx + 1 >= segments.length) return null;
     final code = segments[joinIdx + 1].trim().toUpperCase();

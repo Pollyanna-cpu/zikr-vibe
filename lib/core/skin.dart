@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// A complete visual identity for the app.
-/// Like Octopus card faces — same card, different art. $10 each.
+/// Like Octopus card faces — same card, different art.
+/// Paid skins are $1.99 each via Google Play IAP (see iap_service.dart).
 class ZikrSkin {
   final String id;
   final String name;
@@ -55,7 +56,7 @@ class ZikrSkin {
     required this.nameAr,
     this.description = '',
     this.isFree = false,
-    this.priceUsd = 9.99,
+    this.priceUsd = 1.99,
     required this.primary,
     required this.primaryLight,
     required this.primarySoft,

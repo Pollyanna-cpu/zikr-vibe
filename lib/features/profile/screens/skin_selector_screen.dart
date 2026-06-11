@@ -15,6 +15,21 @@ class SkinSelectorScreen extends ConsumerWidget {
     // Watching the set rebuilds this screen instantly when IAP unlocks a skin.
     ref.watch(ownedSkinsProvider);
 
+    // Surface purchase outcomes — without this, a canceled or failed Google
+    // Play checkout silently returned the user to a still-locked skin.
+    ref.listen<IapEvent?>(iapEventProvider, (_, event) {
+      if (event == null) return;
+      final message = switch (event.kind) {
+        'purchased' =>
+          '${ZikrSkins.byId(event.skinId!).name} unlocked & applied ✓',
+        'canceled' => 'Purchase canceled.',
+        _ => 'Purchase failed. Please try again.',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+      );
+    });
+
     return Scaffold(
       appBar: AppBar(title: const Text('Appearance')),
       body: ListView.separated(
@@ -36,11 +51,11 @@ class SkinSelectorScreen extends ConsumerWidget {
                 final ok = await iap.buySkin(skin.id);
                 if (!ok && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text(
                         'Purchase unavailable. Try again or restore from Profile.',
                       ),
-                      duration: const Duration(seconds: 3),
+                      duration: Duration(seconds: 3),
                     ),
                   );
                 }
@@ -192,7 +207,10 @@ class SkinSelectorScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Text(
-                                '\$${skin.priceUsd.toStringAsFixed(0)}',
+                                // Full precision — toStringAsFixed(0) showed
+                                // "$2" for a $1.99 skin, overstating the price
+                                // vs the actual Play checkout amount.
+                                '\$${skin.priceUsd.toStringAsFixed(2)}',
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
