@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoulVibe Ring — Every turn is a remembrance</title>
+<meta name="description" content="SoulVibe Ring: a smart dhikr ring. Turn the bezel, count your remembrance. Synced with the Zikr Vibe app.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Amiri:ital@0;1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b1026;
+    --bg-deep: #070b1a;
+    --gold: #d4af37;
+    --gold-soft: #e8cd7a;
+    --ink: #ede7d9;
+    --ink-dim: rgba(237, 231, 217, 0.55);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: radial-gradient(ellipse at 50% 0%, var(--bg) 0%, var(--bg-deep) 70%);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+  #scene {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y; /* vertical swipe scrolls the page, horizontal drag spins the ring */
+    cursor: grab;
+  }
+  #scene.dragging { cursor: grabbing; }
+
+  /* ---------- counter HUD ---------- */
+  #hud {
+    position: fixed;
+    left: 50%;
+    bottom: 7vh;
+    transform: translateX(-50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 3;
+    transition: opacity 0.6s ease;
+  }
+  #hud .arabic {
+    font-family: 'Amiri', serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--gold-soft);
+    letter-spacing: 0.02em;
+    min-height: 1.4em;
+  }
+  #hud .latin {
+    font-size: 0.8rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-top: 0.4rem;
+  }
+  #hud .count {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 8vw, 4.6rem);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--ink);
+    transition: transform 0.12s ease, color 0.12s ease;
+  }
+  #hud .count.pulse { transform: scale(1.18); color: var(--gold); }
+  #hud .rounds {
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    color: var(--ink-dim);
+    margin-top: 0.3rem;
+    text-transform: uppercase;
+  }
+
+  /* ---------- content ---------- */
+  main { position: relative; z-index: 1; pointer-events: none; }
+  section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 12vh 8vw;
+    text-align: center;
+  }
+  .eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.4rem;
+  }
+  h1, h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    line-height: 1.15;
+  }
+  h1 { font-size: clamp(2.6rem, 7vw, 5rem); max-width: 16ch; }
+  h2 { font-size: clamp(2rem, 5vw, 3.4rem); max-width: 18ch; }
+  .sub {
+    margin-top: 1.6rem;
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    font-weight: 300;
+    color: var(--ink-dim);
+    max-width: 44ch;
+    line-height: 1.8;
+  }
+  .hint {
+    position: absolute;
+    bottom: 22vh;
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    animation: breathe 3s ease-in-out infinite;
+  }
+  @keyframes breathe { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.9; } }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  .cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+    justify-content: center;
+    margin-top: 3.5rem;
+    max-width: 1100px;
+  }
+  .card {
+    pointer-events: auto;
+    flex: 1 1 260px;
+    max-width: 320px;
+    padding: 2.2rem 1.8rem;
+    border: 1px solid rgba(212, 175, 55, 0.22);
+    border-radius: 18px;
+    background: rgba(11, 16, 38, 0.55);
+    backdrop-filter: blur(8px);
+    transition: border-color 0.4s ease, transform 0.4s ease;
+    text-align: left;
+  }
+  .card:hover { border-color: rgba(212, 175, 55, 0.6); transform: translateY(-6px); }
+  .card .icon { font-size: 1.6rem; margin-bottom: 1rem; }
+  .card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.45rem;
+    font-weight: 600;
+    margin-bottom: 0.7rem;
+  }
+  .card p { font-size: 0.92rem; font-weight: 300; color: var(--ink-dim); line-height: 1.7; }
+
+  .verse {
+    font-family: 'Amiri', serif;
+    font-size: clamp(1.5rem, 3.4vw, 2.2rem);
+    color: var(--gold-soft);
+    line-height: 2.1;
+    margin-top: 2.6rem;
+  }
+  .verse-trans {
+    margin-top: 1rem;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    color: var(--ink-dim);
+  }
+
+  .cta-btn {
+    pointer-events: auto;
+    display: inline-block;
+    margin-top: 3rem;
+    padding: 1.05rem 3.2rem;
+    border: 1px solid var(--gold);
+    border-radius: 999px;
+    color: var(--gold);
+    text-decoration: none;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-size: 0.82rem;
+    transition: background 0.35s ease, color 0.35s ease, box-shadow 0.35s ease;
+  }
+  .cta-btn:hover {
+    background: var(--gold);
+    color: var(--bg-deep);
+    box-shadow: 0 0 42px rgba(212, 175, 55, 0.45);
+  }
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 3rem 8vw 4rem;
+    text-align: center;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    color: var(--ink-dim);
+    pointer-events: auto;
+  }
+  #mute {
+    position: fixed;
+    top: 1.2rem;
+    right: 1.4rem;
+    z-index: 4;
+    background: none;
+    border: 1px solid rgba(237, 231, 217, 0.25);
+    color: var(--ink-dim);
+    border-radius: 999px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+  }
+  #mute:hover { color: var(--ink); border-color: var(--ink); }
+</style>
+<script type="importmap">
+  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<button id="mute" aria-label="toggle sound">SOUND ON</button>
+
+<div id="hud">
+  <div class="arabic" id="phrase-ar">سُبْحَانَ ٱللَّٰهِ</div>
+  <div class="latin" id="phrase-en">SubhanAllah</div>
+  <div class="count" id="count">0</div>
+  <div class="rounds" id="rounds">turn the ring to begin</div>
+</div>
+
+<main>
+  <section id="hero">
+    <div class="eyebrow reveal">SoulVibe Ring</div>
+    <h1 class="reveal">Every turn is a remembrance.</h1>
+    <p class="sub reveal">A smart tasbih, worn as a ring. Spin the bezel — here, with your finger — and watch the count rise.</p>
+    <div class="hint">⟲ &nbsp;drag sideways to turn&nbsp; ⟳</div>
+  </section>
+
+  <section>
+    <div class="eyebrow reveal">How it works</div>
+    <h2 class="reveal">An ancient practice,<br>a quiet companion.</h2>
+    <div class="cards reveal">
+      <div class="card">
+        <div class="icon">◌</div>
+        <h3>Turn to count</h3>
+        <p>The bezel rotates with a soft, certain click. One full turn, one dhikr. No screen between you and your remembrance.</p>
+      </div>
+      <div class="card">
+        <div class="icon">✦</div>
+        <h3>Feel the milestones</h3>
+        <p>A gentle pulse at 33, 66 and 99. Your hands stay folded, your eyes stay closed — the ring keeps the count.</p>
+      </div>
+      <div class="card">
+        <div class="icon">☾</div>
+        <h3>Synced with Zikr Vibe</h3>
+        <p>Every session flows into the Zikr Vibe app: streaks, history, and intentions — kept across your days, not just your moments.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow reveal">Designed for the 99</div>
+    <h2 class="reveal">Remembrance was never<br>meant to be loud.</h2>
+    <p class="sub reveal">For fourteen centuries, fingers have moved across beads in pockets and on laps — in markets, on journeys, in the quiet before dawn. SoulVibe Ring carries that same silence on a single finger.</p>
+    <div class="verse reveal">أَلَا بِذِكْرِ ٱللَّهِ تَطْمَئِنُّ ٱلْقُلُوبُ</div>
+    <div class="verse-trans reveal">“Surely in the remembrance of God do hearts find rest.” — 13:28</div>
+  </section>
+
+  <section>
+    <div class="eyebrow reveal">SoulVibe Ring</div>
+    <h2 class="reveal">Bring remembrance<br>to your hand.</h2>
+    <p class="sub reveal">Crafted in titanium and gold tone. Water-resistant. Weeks of battery. One purpose.</p>
+    <a class="cta-btn reveal" href="https://soulvibe.ring" target="_blank" rel="noopener">Notify me</a>
+  </section>
+</main>
+
+<footer>SOULVIBE RING · A ZIKR VIBE COMPANION · © 2026</footer>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ---------------- scene setup ---------------- */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0.2, 4.4);
+
+scene.add(new THREE.AmbientLight(0x8a7b4f, 0.55));
+const key = new THREE.PointLight(0xffe9b0, 90);
+key.position.set(4, 4, 5);
+scene.add(key);
+const rim = new THREE.PointLight(0x5a78ff, 50);
+rim.position.set(-5, -2, -3);
+scene.add(rim);
+const fill = new THREE.PointLight(0xd4af37, 25);
+fill.position.set(0, -4, 3);
+scene.add(fill);
+
+/* ---------------- the ring ---------------- */
+const ringGroup = new THREE.Group();      // tilt / presentation
+const spinner = new THREE.Group();        // the part the user spins
+ringGroup.add(spinner);
+scene.add(ringGroup);
+ringGroup.rotation.x = 1.15;              // lay it back so we look "into" the ring
+ringGroup.rotation.y = -0.15;
+
+const goldMat = new THREE.MeshStandardMaterial({
+  color: 0xc9a227, metalness: 0.95, roughness: 0.22,
+});
+const darkMat = new THREE.MeshStandardMaterial({
+  color: 0x1a2138, metalness: 0.85, roughness: 0.35,
+});
+
+// main band
+const band = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.16, 48, 220), goldMat);
+spinner.add(band);
+// inner sleeve (the "fixed" part of a spinner ring, visually)
+const sleeve = new THREE.Mesh(new THREE.TorusGeometry(1.15, 0.205, 48, 220), darkMat);
+sleeve.scale.set(0.985, 0.985, 0.62);
+ringGroup.add(sleeve);
+
+// 33 tick marks around the bezel — the tasbih grain
+const tickGeo = new THREE.BoxGeometry(0.025, 0.1, 0.045);
+for (let i = 0; i < 33; i++) {
+  const t = new THREE.Mesh(tickGeo, darkMat);
+  const a = (i / 33) * Math.PI * 2;
+  t.position.set(Math.cos(a) * 1.15, Math.sin(a) * 1.15, 0.155);
+  t.rotation.z = a + Math.PI / 2;
+  spinner.add(t);
+}
+
+// the marker gem
+const gem = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(0.085, 1),
+  new THREE.MeshStandardMaterial({
+    color: 0x7fe7d3, emissive: 0x2a8f7d, emissiveIntensity: 1.6,
+    metalness: 0.3, roughness: 0.15,
+  })
+);
+gem.position.set(1.15, 0, 0.21);
+spinner.add(gem);
+const gemLight = new THREE.PointLight(0x7fe7d3, 8, 3);
+gem.add(gemLight);
+
+/* ---------------- starfield ---------------- */
+const starCount = 900;
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  const r = 14 + Math.random() * 26;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(2 * Math.random() - 1);
+  starPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+  starPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+  starPos[i * 3 + 2] = r * Math.cos(phi) - 10;
+}
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+  color: 0xcfd8ff, size: 0.05, transparent: true, opacity: 0.7, depthWrite: false,
+}));
+scene.add(stars);
+
+/* ---------------- particle bursts ---------------- */
+const bursts = [];
+function spawnBurst(big = false) {
+  const n = big ? 320 : 110;
+  const pos = new Float32Array(n * 3);
+  const vel = [];
+  for (let i = 0; i < n; i++) {
+    // start on the ring band, in world space of the spinner
+    const a = Math.random() * Math.PI * 2;
+    const p = new THREE.Vector3(Math.cos(a) * 1.15, Math.sin(a) * 1.15, 0);
+    ringGroup.localToWorld(p);
+    pos[i * 3] = p.x; pos[i * 3 + 1] = p.y; pos[i * 3 + 2] = p.z;
+    const speed = (big ? 1.4 : 0.8) * (0.4 + Math.random());
+    vel.push(new THREE.Vector3(
+      (Math.random() - 0.5), (Math.random() - 0.5) + 0.35, (Math.random() - 0.5)
+    ).normalize().multiplyScalar(speed));
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    color: big ? 0xffe9a8 : 0xd4af37, size: big ? 0.06 : 0.04,
+    transparent: true, opacity: 1, depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const points = new THREE.Points(geo, mat);
+  scene.add(points);
+  bursts.push({ points, vel, life: 1 });
+}
+
+function updateBursts(dt) {
+  for (let i = bursts.length - 1; i >= 0; i--) {
+    const b = bursts[i];
+    b.life -= dt * 0.8;
+    const arr = b.points.geometry.attributes.position.array;
+    for (let j = 0; j < b.vel.length; j++) {
+      arr[j * 3] += b.vel[j].x * dt;
+      arr[j * 3 + 1] += b.vel[j].y * dt;
+      arr[j * 3 + 2] += b.vel[j].z * dt;
+      b.vel[j].multiplyScalar(0.985);
+    }
+    b.points.geometry.attributes.position.needsUpdate = true;
+    b.points.material.opacity = Math.max(b.life, 0);
+    if (b.life <= 0) {
+      scene.remove(b.points);
+      b.points.geometry.dispose();
+      b.points.material.dispose();
+      bursts.splice(i, 1);
+    }
+  }
+}
+
+/* ---------------- sound ---------------- */
+let audioCtx = null, muted = false;
+const muteBtn = document.getElementById('mute');
+muteBtn.addEventListener('click', () => {
+  muted = !muted;
+  muteBtn.textContent = muted ? 'SOUND OFF' : 'SOUND ON';
+});
+function chime(high = false) {
+  if (muted) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = high ? 1318.5 : 880;
+    g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35);
+    o.connect(g).connect(audioCtx.destination);
+    o.start();
+    o.stop(audioCtx.currentTime + 0.4);
+  } catch (e) { /* audio unavailable — stay silent */ }
+}
+
+/* ---------------- dhikr counting ---------------- */
+const PHASES = [
+  { ar: 'سُبْحَانَ ٱللَّٰهِ', en: 'SubhanAllah' },
+  { ar: 'ٱلْحَمْدُ لِلَّٰهِ', en: 'Alhamdulillah' },
+  { ar: 'ٱللَّٰهُ أَكْبَرُ', en: 'Allahu Akbar' },
+];
+let count = 0, rounds = 0;
+const countEl = document.getElementById('count');
+const roundsEl = document.getElementById('rounds');
+const phraseAr = document.getElementById('phrase-ar');
+const phraseEn = document.getElementById('phrase-en');
+
+function onCount() {
+  count++;
+  const inRound = ((count - 1) % 99) + 1;
+  const phase = PHASES[Math.floor(((count - 1) % 99) / 33)];
+  phraseAr.textContent = phase.ar;
+  phraseEn.textContent = phase.en;
+  countEl.textContent = inRound;
+  countEl.classList.add('pulse');
+  setTimeout(() => countEl.classList.remove('pulse'), 130);
+  if (navigator.vibrate) navigator.vibrate(20);
+
+  if (inRound === 99) {
+    rounds++;
+    spawnBurst(true);
+    chime(true);
+    roundsEl.textContent = `✦ round ${rounds} complete ✦`;
+  } else {
+    spawnBurst(false);
+    chime(false);
+    roundsEl.textContent = rounds > 0 ? `round ${rounds + 1} · total ${count}` : `total ${count}`;
+  }
+}
+
+/* ---------------- drag to spin ---------------- */
+let dragging = false, lastX = 0, spinVel = 0;
+let accumulated = 0;                 // radians since last count
+const TURN = Math.PI * 2 / 33;       // one "bead" = 1/33 of a turn (33 ticks)
+
+canvas.addEventListener('pointerdown', (e) => {
+  dragging = true;
+  lastX = e.clientX;
+  canvas.classList.add('dragging');
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX;
+  lastX = e.clientX;
+  const delta = dx * 0.012;
+  spinner.rotation.z -= delta;
+  spinVel = -delta;
+  accumulated += Math.abs(delta);
+  while (accumulated >= TURN) {
+    accumulated -= TURN;
+    onCount();
+  }
+});
+function endDrag() { dragging = false; canvas.classList.remove('dragging'); }
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+
+/* ---------------- scroll narrative ---------------- */
+const hud = document.getElementById('hud');
+let scrollT = 0;
+window.addEventListener('scroll', () => {
+  scrollT = window.scrollY / window.innerHeight;
+  hud.style.opacity = Math.max(0, 1 - scrollT * 1.6);
+}, { passive: true });
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((en) => { if (en.isIntersecting) en.target.classList.add('visible'); });
+}, { threshold: 0.18 });
+document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+/* ---------------- render loop ---------------- */
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  // idle drift + momentum
+  if (!dragging) {
+    spinner.rotation.z += spinVel;
+    spinVel *= 0.95;
+    if (Math.abs(spinVel) < 0.0004) spinner.rotation.z += dt * 0.05; // slow idle turn
+    accumulated += Math.abs(spinVel);
+    while (accumulated >= TURN) { accumulated -= TURN; onCount(); }
+  }
+
+  // gentle float
+  ringGroup.position.y = Math.sin(t * 0.8) * 0.05;
+  // scroll choreography: ring recedes and tips as the story scrolls
+  const s = Math.min(scrollT, 3);
+  ringGroup.position.z = -s * 0.9;
+  ringGroup.position.x = Math.sin(s * 1.1) * 0.7;
+  ringGroup.rotation.x = 1.15 - s * 0.18;
+  camera.position.y = 0.2 + s * 0.1;
+
+  stars.rotation.y = t * 0.01;
+  gem.material.emissiveIntensity = 1.3 + Math.sin(t * 2.4) * 0.5;
+
+  updateBursts(dt);
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
