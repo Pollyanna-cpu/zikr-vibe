@@ -74,3 +74,7 @@ app.*.map.json
 *.* 2
 
 .vercel
+
+# internal governance / business docs — never commit to a public repo
+CLAUDE.md
+docs/
