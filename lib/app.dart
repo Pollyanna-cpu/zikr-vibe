@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme.dart';
@@ -50,6 +51,28 @@ class _ZikrVibeAppState extends ConsumerState<ZikrVibeApp> {
       // Force English (LTR) until language picker shipped - overrides device locale.
       // Tester signal 5/7: mixed Arabic UI on non-Arabic device.
       locale: const Locale('en'),
+      // Web/desktop: the app is a phone-shaped column. On wide viewports,
+      // letterbox it centered at 520px instead of stretching mobile layouts
+      // across the full window.
+      builder: (context, child) {
+        if (!kIsWeb || child == null) {
+          return child ?? const SizedBox.shrink();
+        }
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth <= 640) return child;
+            return ColoredBox(
+              color: const Color(0xFF0F1311),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: ClipRect(child: child),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

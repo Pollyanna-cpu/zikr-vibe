@@ -44,18 +44,25 @@ class StreakNotifier extends StateNotifier<StreakState> {
   void _load() {
     final box = Hive.box('dhikr_sessions');
 
-    // Load counter groups to calculate total. Defensive: list items may be
-    // anything if Hive was edited externally / corrupted. Skip non-Map items
-    // and missing/non-int 'count' fields rather than throwing on .[] access.
-    final saved = box.get('counter_groups');
-    int total = 0;
-    if (saved is List) {
-      for (final g in saved) {
-        if (g is Map) {
-          final c = g['count'];
-          if (c is int) total += c;
+    // Lifetime total: monotonic Hive counter written by DhikrNotifier.tap().
+    // Migration for pre-existing installs (key absent): seed it from the sum
+    // of live counters — best available approximation — then it only grows.
+    final storedTotal = box.get('lifetime_total');
+    int total;
+    if (storedTotal is int) {
+      total = storedTotal;
+    } else {
+      final saved = box.get('counter_groups');
+      total = 0;
+      if (saved is List) {
+        for (final g in saved) {
+          if (g is Map) {
+            final c = g['count'];
+            if (c is int) total += c;
+          }
         }
       }
+      box.put('lifetime_total', total);
     }
 
     // Load active dates. Same defensive parse — drop non-stringable items.
@@ -141,13 +148,12 @@ class StreakNotifier extends StateNotifier<StreakState> {
     Analytics.streakDay2IfNew(streak);
   }
 
-  /// Recompute lifetimeTotal from a (just-mutated) dhikr state. Called by
-  /// the ref.listen on dhikrProvider above; cheap because it's just a sum.
+  /// Re-read the monotonic lifetime counter after any dhikr mutation. Called
+  /// by the ref.listen on dhikrProvider above; cheap because it's one box get.
   void _refreshLifetimeTotal(DhikrState dhikr) {
-    int total = 0;
-    for (final g in dhikr.groups) {
-      total += g.count;
-    }
+    final box = Hive.box('dhikr_sessions');
+    final stored = box.get('lifetime_total');
+    final total = stored is int ? stored : state.lifetimeTotal;
     if (total == state.lifetimeTotal) return;
     state = StreakState(
       currentStreak: state.currentStreak,
@@ -178,6 +184,7 @@ class StreakNotifier extends StateNotifier<StreakState> {
   }
 }
 
-final streakProvider = StateNotifierProvider<StreakNotifier, StreakState>((ref) {
+final streakProvider =
+    StateNotifierProvider<StreakNotifier, StreakState>((ref) {
   return StreakNotifier(ref);
 });

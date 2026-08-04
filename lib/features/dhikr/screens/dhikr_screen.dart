@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'
+    show KeyDownEvent, KeyEvent, LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -33,6 +35,9 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
 
   // Count change animation
   late AnimationController _countController;
+
+  // Desktop/web: space & enter count, arrow keys switch groups.
+  final FocusNode _keyFocus = FocusNode(debugLabel: 'dhikrKeys');
 
   @override
   void initState() {
@@ -73,6 +78,7 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
     _tapController.dispose();
     _rippleController.dispose();
     _countController.dispose();
+    _keyFocus.dispose();
     if (!kIsWeb && ref.read(dhikrWakelockEnabledProvider)) {
       WakelockPlus.disable();
     }
@@ -80,6 +86,9 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
   }
 
   void _onTap() {
+    // Reclaim keyboard focus (a sheet/text field may have taken it) so the
+    // next space press still counts.
+    _keyFocus.requestFocus();
     ref.read(dhikrProvider.notifier).tap();
     ref.read(streakProvider.notifier).markTodayActive();
 
@@ -87,6 +96,28 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
     _tapController.forward().then((_) => _tapController.reverse());
     _rippleController.forward(from: 0.0);
     _countController.forward(from: 0.0);
+  }
+
+  void _onKeyEvent(KeyEvent event) {
+    // KeyDownEvent only: one press = one bead. Ignores auto-repeat while held
+    // (KeyRepeatEvent) — dhikr is deliberate, not a turbo button.
+    if (event is! KeyDownEvent) return;
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      _onTap();
+    } else if (key == LogicalKeyboardKey.arrowRight) {
+      final d = ref.read(dhikrProvider);
+      ref
+          .read(dhikrProvider.notifier)
+          .switchGroup((d.activeIndex + 1) % d.groups.length);
+    } else if (key == LogicalKeyboardKey.arrowLeft) {
+      final d = ref.read(dhikrProvider);
+      ref
+          .read(dhikrProvider.notifier)
+          .switchGroup((d.activeIndex - 1 + d.groups.length) % d.groups.length);
+    }
   }
 
   @override
@@ -98,215 +129,224 @@ class _DhikrScreenState extends ConsumerState<DhikrScreen>
 
     return Scaffold(
       backgroundColor: skin.surface,
-      body: GestureDetector(
-        onTap: _onTap,
-        onLongPress: () => _showResetSheet(context, ref, group.name),
-        onHorizontalDragEnd: (details) {
-          if (details.primaryVelocity == null) return;
-          if (details.primaryVelocity! < -200) {
-            final next = (dhikr.activeIndex + 1) % dhikr.groups.length;
-            ref.read(dhikrProvider.notifier).switchGroup(next);
-          } else if (details.primaryVelocity! > 200) {
-            final prev = (dhikr.activeIndex - 1 + dhikr.groups.length) %
-                dhikr.groups.length;
-            ref.read(dhikrProvider.notifier).switchGroup(prev);
-          }
-        },
-        behavior: HitTestBehavior.opaque,
-        child: Stack(
-          children: [
-            // Subtle geometric background pattern
-            Positioned.fill(child: _GeometricBackground(skin: skin)),
+      body: KeyboardListener(
+        focusNode: _keyFocus,
+        autofocus: true,
+        onKeyEvent: _onKeyEvent,
+        child: GestureDetector(
+          onTap: _onTap,
+          onLongPress: () => _showResetSheet(context, ref, group.name),
+          onHorizontalDragEnd: (details) {
+            if (details.primaryVelocity == null) return;
+            if (details.primaryVelocity! < -200) {
+              final next = (dhikr.activeIndex + 1) % dhikr.groups.length;
+              ref.read(dhikrProvider.notifier).switchGroup(next);
+            } else if (details.primaryVelocity! > 200) {
+              final prev = (dhikr.activeIndex - 1 + dhikr.groups.length) %
+                  dhikr.groups.length;
+              ref.read(dhikrProvider.notifier).switchGroup(prev);
+            }
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
+            children: [
+              // Subtle geometric background pattern
+              Positioned.fill(child: _GeometricBackground(skin: skin)),
 
-            // Ripple effect
-            AnimatedBuilder(
-              animation: _rippleController,
-              builder: (context, child) {
-                if (!_rippleController.isAnimating) return const SizedBox();
-                return Center(
-                  child: Container(
-                    width: 300 * _rippleSize.value,
-                    height: 300 * _rippleSize.value,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color:
-                          skin.tapGlow.withValues(alpha: _rippleOpacity.value),
+              // Ripple effect
+              AnimatedBuilder(
+                animation: _rippleController,
+                builder: (context, child) {
+                  if (!_rippleController.isAnimating) return const SizedBox();
+                  return Center(
+                    child: Container(
+                      width: 300 * _rippleSize.value,
+                      height: 300 * _rippleSize.value,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: skin.tapGlow
+                            .withValues(alpha: _rippleOpacity.value),
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
 
-            // Main content
-            SafeArea(
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
+              // Main content
+              SafeArea(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
 
-                  // Minimal group pills
-                  _GroupPills(
-                    groups: dhikr.groups,
-                    activeIndex: dhikr.activeIndex,
-                    onTap: (i) =>
-                        ref.read(dhikrProvider.notifier).switchGroup(i),
-                    onAdd: dhikr.groups.length < 5
-                        ? () => _showAddGroupSheet(context, ref)
-                        : null,
-                  ),
+                    // Minimal group pills
+                    _GroupPills(
+                      groups: dhikr.groups,
+                      activeIndex: dhikr.activeIndex,
+                      onTap: (i) =>
+                          ref.read(dhikrProvider.notifier).switchGroup(i),
+                      onAdd: dhikr.groups.length < 5
+                          ? () => _showAddGroupSheet(context, ref)
+                          : null,
+                    ),
 
-                  // Counter area — perfectly centered
-                  Expanded(
-                    child: AnimatedBuilder(
-                      animation: _tapController,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _tapScale.value,
-                          child: child,
+                    // Counter area — perfectly centered
+                    Expanded(
+                      child: AnimatedBuilder(
+                        animation: _tapController,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _tapScale.value,
+                            child: child,
+                          );
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Group name — elegant
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: Text(
+                                group.name,
+                                key: ValueKey(group.id),
+                                style: GoogleFonts.inter(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                  color: skin.inkSoft,
+                                  letterSpacing: 1.5,
+                                ).copyWith(
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: screenHeight * 0.04),
+
+                            // THE NUMBER — hero element
+                            // Gold glow at 33/66/99/100 milestones
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 150),
+                              transitionBuilder: (child, animation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, 0.1),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                '${group.count}',
+                                key: ValueKey(group.count),
+                                style: GoogleFonts.inter(
+                                  fontSize: 120,
+                                  fontWeight: FontWeight.w700,
+                                  color: ref
+                                          .read(dhikrProvider.notifier)
+                                          .isAtMilestone
+                                      ? skin.accent
+                                      : skin.ink,
+                                  height: 1,
+                                  letterSpacing: -4,
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: screenHeight * 0.03),
+
+                            // Subtle progress dots (visual rhythm)
+                            if (!group.isAtMax)
+                              _ProgressDots(count: group.count, skin: skin),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Bottom — streak + daily total
+                    GestureDetector(
+                      onTap: () {
+                        // Navigate to streak screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const StreakScreen()),
                         );
                       },
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Group name — elegant
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: Text(
-                              group.name,
-                              key: ValueKey(group.id),
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: skin.inkSoft,
-                                letterSpacing: 1.5,
-                              ).copyWith(
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: screenHeight * 0.04),
-
-                          // THE NUMBER — hero element
-                          // Gold glow at 33/66/99/100 milestones
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 150),
-                            transitionBuilder: (child, animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0, 0.1),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Text(
-                              '${group.count}',
-                              key: ValueKey(group.count),
-                              style: GoogleFonts.inter(
-                                fontSize: 120,
-                                fontWeight: FontWeight.w700,
-                                color: ref
-                                        .read(dhikrProvider.notifier)
-                                        .isAtMilestone
-                                    ? skin.accent
-                                    : skin.ink,
-                                height: 1,
-                                letterSpacing: -4,
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: screenHeight * 0.03),
-
-                          // Subtle progress dots (visual rhythm)
-                          if (!group.isAtMax)
-                            _ProgressDots(count: group.count, skin: skin),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Bottom — streak + daily total
-                  GestureDetector(
-                    onTap: () {
-                      // Navigate to streak screen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const StreakScreen()),
-                      );
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Column(
-                        children: [
-                          // Streak badge (tappable)
-                          Consumer(builder: (context, ref, _) {
-                            final streak = ref.watch(streakProvider);
-                            if (streak.currentStreak > 0) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: skin.primarySoft,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text('🔥',
-                                        style: TextStyle(fontSize: 14)),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      AppLocalizations.of(context)
-                                          .dayStreak(streak.currentStreak),
-                                      style: GoogleFonts.inter(
-                                        fontSize: 13,
-                                        color: skin.primary,
-                                        fontWeight: FontWeight.w500,
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Column(
+                          children: [
+                            // Streak badge (tappable)
+                            Consumer(builder: (context, ref, _) {
+                              final streak = ref.watch(streakProvider);
+                              if (streak.currentStreak > 0) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: skin.primarySoft,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text('🔥',
+                                          style: TextStyle(fontSize: 14)),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        AppLocalizations.of(context)
+                                            .dayStreak(streak.currentStreak),
+                                        style: GoogleFonts.inter(
+                                          fontSize: 13,
+                                          color: skin.primary,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                );
+                              }
+                              return const SizedBox();
+                            }),
+                            const SizedBox(height: 6),
+                            if (dhikr.todayCount > 0)
+                              Text(
+                                AppLocalizations.of(context)
+                                    .todayTotal(dhikr.todayCount),
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  color: skin.inkMuted,
+                                  fontWeight: FontWeight.w400,
                                 ),
-                              );
-                            }
-                            return const SizedBox();
-                          }),
-                          const SizedBox(height: 6),
-                          if (dhikr.dailyTotal > 0)
+                              ),
+                            const SizedBox(height: 4),
                             Text(
-                              AppLocalizations.of(context)
-                                  .todayTotal(dhikr.dailyTotal),
+                              group.isAtMax
+                                  ? AppLocalizations.of(context).alhamdulillah
+                                  : (kIsWeb
+                                      ? '${AppLocalizations.of(context).gestureHint} · space'
+                                      : AppLocalizations.of(context)
+                                          .gestureHint),
                               style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: skin.inkMuted,
-                                fontWeight: FontWeight.w400,
+                                fontSize: 11,
+                                color: skin.inkMuted.withValues(alpha: 0.5),
+                                letterSpacing: 2,
                               ),
                             ),
-                          const SizedBox(height: 4),
-                          Text(
-                            group.isAtMax
-                                ? AppLocalizations.of(context).alhamdulillah
-                                : AppLocalizations.of(context).gestureHint,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: skin.inkMuted.withValues(alpha: 0.5),
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

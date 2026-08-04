@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @yourJourney.
   ///
   /// In en, this message translates to:
-  /// **'Your Journey'**
+  /// **'Your Stats'**
   String get yourJourney;
 
   /// No description provided for @customTarget.

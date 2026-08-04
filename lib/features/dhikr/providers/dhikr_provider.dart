@@ -10,9 +10,14 @@ class DhikrState {
   final List<CounterGroup> groups;
   final int activeIndex;
 
+  /// Taps made today (date-keyed, so it survives counter resets and
+  /// rolls over at midnight — unlike summing live counter values).
+  final int todayCount;
+
   const DhikrState({
     required this.groups,
     this.activeIndex = 0,
+    this.todayCount = 0,
   });
 
   CounterGroup get active {
@@ -21,21 +26,15 @@ class DhikrState {
     return groups[idx];
   }
 
-  int get dailyTotal {
-    int total = 0;
-    for (final g in groups) {
-      total += g.count;
-    }
-    return total;
-  }
-
   DhikrState copyWith({
     List<CounterGroup>? groups,
     int? activeIndex,
+    int? todayCount,
   }) {
     return DhikrState(
       groups: groups ?? this.groups,
       activeIndex: activeIndex ?? this.activeIndex,
+      todayCount: todayCount ?? this.todayCount,
     );
   }
 }
@@ -49,18 +48,35 @@ class DhikrNotifier extends StateNotifier<DhikrState> {
   void _loadFromStorage() {
     final box = Hive.box('dhikr_sessions');
     final saved = box.get('counter_groups');
+    List<CounterGroup>? groups;
     if (saved != null && saved is List) {
       try {
-        final groups = saved
+        final parsed = saved
             .map((m) => CounterGroup.fromMap(Map<dynamic, dynamic>.from(m)))
             .toList();
-        if (groups.isNotEmpty) {
-          state = DhikrState(groups: groups);
-        }
+        if (parsed.isNotEmpty) groups = parsed;
       } catch (e) {
         debugPrint('[Dhikr] Corrupted Hive counter_groups, using defaults: $e');
       }
     }
+
+    // Today's tap count — keyed by date, so stale entries never leak in.
+    final daily = box.get('daily_counts');
+    int todayCount = 0;
+    if (daily is Map) {
+      final v = daily[_todayKey()];
+      if (v is int) todayCount = v;
+    }
+
+    state = DhikrState(
+      groups: groups ?? state.groups,
+      todayCount: todayCount,
+    );
+  }
+
+  static String _todayKey() {
+    final d = DateTime.now();
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
   /// Save all counters to Hive
@@ -85,7 +101,8 @@ class DhikrNotifier extends StateNotifier<DhikrState> {
     group.count += 1;
 
     // Haptic feedback: strong pulse at tasbih milestones, light tap otherwise
-    if (_milestones.contains(group.count % 100 == 0 ? 100 : group.count % 100)) {
+    if (_milestones
+        .contains(group.count % 100 == 0 ? 100 : group.count % 100)) {
       HapticFeedback.heavyImpact();
     } else {
       HapticFeedback.lightImpact();
@@ -95,7 +112,30 @@ class DhikrNotifier extends StateNotifier<DhikrState> {
       Analytics.dhikrComplete100();
     }
 
-    state = state.copyWith(groups: [...state.groups]);
+    // True lifetime total: monotonic, survives counter resets. Kept in Hive
+    // (not derived from live counters) — Profile/Streak read this key.
+    final box = Hive.box('dhikr_sessions');
+    final lifetime = box.get('lifetime_total');
+    box.put('lifetime_total', (lifetime is int ? lifetime : 0) + 1);
+
+    // Per-day tap counts: date-keyed map, midnight-correct "today".
+    final today = _todayKey();
+    final raw = box.get('daily_counts');
+    final daily =
+        raw is Map ? Map<dynamic, dynamic>.from(raw) : <dynamic, dynamic>{};
+    final prev = daily[today];
+    final todayCount = (prev is int ? prev : 0) + 1;
+    daily[today] = todayCount;
+    // Prune: keep the most recent 90 dates so the box never grows unbounded.
+    if (daily.length > 90) {
+      final keys = daily.keys.map((k) => k.toString()).toList()..sort();
+      while (keys.length > 90) {
+        daily.remove(keys.removeAt(0));
+      }
+    }
+    box.put('daily_counts', daily);
+
+    state = state.copyWith(groups: [...state.groups], todayCount: todayCount);
     _persist();
   }
 
@@ -128,8 +168,7 @@ class DhikrNotifier extends StateNotifier<DhikrState> {
     if (state.groups.length >= 5) return false;
     final cleaned = name.trim();
     if (cleaned.isEmpty) return false;
-    final clamped =
-        cleaned.length > 30 ? cleaned.substring(0, 30) : cleaned;
+    final clamped = cleaned.length > 30 ? cleaned.substring(0, 30) : cleaned;
     final newGroup = CounterGroup(
       id: 'g${DateTime.now().millisecondsSinceEpoch}',
       name: clamped,
@@ -145,8 +184,7 @@ class DhikrNotifier extends StateNotifier<DhikrState> {
     if (index < 0 || index >= state.groups.length) return;
     final cleaned = newName.trim();
     if (cleaned.isEmpty) return;
-    final clamped =
-        cleaned.length > 30 ? cleaned.substring(0, 30) : cleaned;
+    final clamped = cleaned.length > 30 ? cleaned.substring(0, 30) : cleaned;
     state.groups[index].name = clamped;
     state = state.copyWith(groups: [...state.groups]);
     _persist();
