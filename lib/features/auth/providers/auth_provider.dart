@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -60,12 +61,18 @@ class AuthService {
     );
   }
 
+  /// OAuth return address. Web must come back to the site itself — the
+  /// io.supabase deep link only exists where the native app is installed;
+  /// on web it lands Safari on "server can't be found".
+  static String get _oauthRedirect =>
+      kIsWeb ? Uri.base.origin : 'io.supabase.zikrvibe://login-callback/';
+
   /// Sign in with Google
   Future<bool> signInWithGoogle() async {
     if (_client == null) throw Exception('Supabase not configured');
     return await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: 'io.supabase.zikrvibe://login-callback/',
+      redirectTo: _oauthRedirect,
     );
   }
 
@@ -74,7 +81,7 @@ class AuthService {
     if (_client == null) throw Exception('Supabase not configured');
     return await _client.auth.signInWithOAuth(
       OAuthProvider.apple,
-      redirectTo: 'io.supabase.zikrvibe://login-callback/',
+      redirectTo: _oauthRedirect,
     );
   }
 

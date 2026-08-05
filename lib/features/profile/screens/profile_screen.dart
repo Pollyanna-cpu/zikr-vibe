@@ -147,25 +147,29 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 32),
 
-            // Sign out (works for both authed users + guest "Use without account" mode)
-            TextButton(
-              onPressed: () async {
-                // 1. If Supabase session exists, sign out
-                final isLoggedIn =
-                    ref.read(authStateProvider).valueOrNull != null;
-                if (isLoggedIn) {
+            // Guest-first: signed-out users get an opt-in Sign In entry
+            // (sync + circles); signed-in users get Sign Out. Nobody is
+            // ever forced through /login to use the counter.
+            if (user == null)
+              _SettingsTile(
+                icon: Icons.login_rounded,
+                label: 'Sign In',
+                subtitle: 'Sync across devices · join circles',
+                skin: skin,
+                onTap: () => context.go('/login'),
+              )
+            else
+              TextButton(
+                onPressed: () async {
                   await ref.read(authServiceProvider).signOut();
-                }
-                // 2. Always exit guest mode (otherwise router stays on main shell)
-                resetSkippedAuth(ref);
-                // 3. Force back to login (router redirect won't fire if already on shell route)
-                if (context.mounted) context.go('/login');
-              },
-              child: Text(
-                'Sign Out',
-                style: TextStyle(color: skin.error),
+                  resetSkippedAuth(ref);
+                  if (context.mounted) context.go('/dhikr');
+                },
+                child: Text(
+                  'Sign Out',
+                  style: TextStyle(color: skin.error),
+                ),
               ),
-            ),
           ],
         ),
       ),

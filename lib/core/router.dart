@@ -14,7 +14,6 @@ import '../features/streak/screens/streak_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
-  final skippedAuth = ref.watch(skippedAuthProvider);
   final onboardingSeen = ref.watch(onboardingSeenProvider);
 
   return GoRouter(
@@ -27,33 +26,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (pendingInvite != null &&
           state.matchedLocation != '/groups' &&
           state.matchedLocation != '/onboarding') {
-        final supabaseConfigured = ref.read(supabaseClientProvider) != null;
-        final isLoggedIn = authState.valueOrNull != null;
-        if (!supabaseConfigured || skippedAuth || isLoggedIn) {
-          return '/groups';
-        }
+        // Guest-first: everyone can land on /groups; the screen itself
+        // asks for sign-in when the invite actually needs an account.
+        return '/groups';
       }
 
-      // Skip auth redirect if Supabase not configured
-      if (ref.read(supabaseClientProvider) == null) return null;
-
+      // Guest-first (Yun 8/05): the app opens straight into the counter —
+      // no account wall. /login is opt-in, reached from Profile, for people
+      // who want sync/circles. Signed-out ≠ locked out.
       final isLoggedIn = authState.valueOrNull != null;
-      final isAuthRoute = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/onboarding';
-      final pastAuth = isLoggedIn || skippedAuth;
 
-      // Past auth (logged in or guest) but onboarding not yet seen → show it
-      // once. Onboarding's Skip/Get Started both set the flag.
-      if (pastAuth &&
-          !onboardingSeen &&
-          state.matchedLocation != '/onboarding') {
+      // First run: show the 3-page intro once, then land on the counter.
+      if (!onboardingSeen && state.matchedLocation != '/onboarding') {
         return '/onboarding';
       }
 
-      // Not past auth and not on /login → send to login. /onboarding is
-      // reachable only after auth is established.
-      if (!pastAuth && !isAuthRoute) return '/login';
-      if (pastAuth && state.matchedLocation == '/login') return '/dhikr';
+      // Already signed in — /login has nothing to offer.
+      if (isLoggedIn && state.matchedLocation == '/login') return '/dhikr';
       return null;
     },
     routes: [
