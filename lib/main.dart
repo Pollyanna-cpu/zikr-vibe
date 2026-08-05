@@ -2,6 +2,7 @@ import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
@@ -12,6 +13,12 @@ import 'core/notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Serve Inter from bundled assets only (assets/google_fonts/). Runtime
+  // fetching hits fonts.gstatic.com, which the web CSP blocks (and which is
+  // unreachable in China) — with it enabled, every Text on the page can
+  // render blank. Bundled files + no-fetch = text always renders.
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Surface uncaught Flutter framework errors instead of letting release builds
   // freeze the UI silently. Logs to console + (in debug) shows the red screen.

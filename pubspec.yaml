@@ -110,6 +110,17 @@ flutter_native_splash:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    # Bundled Inter (w400-w800) so google_fonts never fetches from
+    # fonts.gstatic.com at runtime — CSP blocks it on web, and it's
+    # unreachable in China. See GoogleFonts.config in main.dart.
+    - assets/google_fonts/
+  fonts:
+    # Registering Roboto stops the web engine downloading its own
+    # fallback copy from fonts.gstatic.com (same CSP/China problem).
+    - family: Roboto
+      fonts:
+        - asset: assets/google_fonts/Roboto-Regular.ttf
   # assets:
   #   - assets/icons/
   #   - assets/patterns/
