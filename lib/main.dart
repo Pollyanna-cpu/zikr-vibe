@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'core/auth_session_guard.dart';
 import 'core/constants.dart';
 import 'core/deep_links.dart';
 import 'core/notifications.dart';
+import 'core/prayer_scheduler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -91,6 +93,13 @@ void main() async {
 
   // Initialize notifications
   await NotificationService.init();
+
+  // Slide the 7-day prayer-reminder window forward on every boot, from
+  // cached coordinates — no GPS prompt before the first frame. No-op on
+  // web and when reminders are off.
+  if (!kIsWeb) {
+    unawaited(PrayerScheduler.reschedule());
+  }
 
   // Initialize deep links - capture cold-start invite from
   // https://zikrvibe.com/join/<CODE> (and the app_links app:// variant).

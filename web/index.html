@@ -234,8 +234,17 @@
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>
 <body>
-  <!-- Closed-test recruitment banner (Android closed beta, added 2026-05-18). Remove after Production launch. -->
-  <a href="https://play.google.com/apps/testing/com.zikrvibe.app" target="_blank" rel="noopener" id="zv-beta-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;display:block;padding:10px 16px;background:#0a4d38;color:#f5f0e1;text-align:center;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:500;text-decoration:none;line-height:1.4;letter-spacing:0.01em;box-shadow:0 1px 0 rgba(0,0,0,0.15);">🔧 Help unlock launch — be an Android beta tester (1 min) →</a>
+  <!-- Closed-test recruitment banner (Android closed beta, added 2026-05-18). Remove after Production launch.
+       Dismissible (2026-08-06): the fixed overlay covers Flutter's AppBar —
+       including every sub-page's back button — so without the ✕ the prayer
+       settings page is a dead end on web. -->
+  <a href="https://play.google.com/apps/testing/com.zikrvibe.app" target="_blank" rel="noopener" id="zv-beta-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;display:block;padding:10px 40px 10px 16px;background:#0a4d38;color:#f5f0e1;text-align:center;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:500;text-decoration:none;line-height:1.4;letter-spacing:0.01em;box-shadow:0 1px 0 rgba(0,0,0,0.15);">🔧 Help unlock launch — be an Android beta tester (1 min) →<span onclick="event.preventDefault();event.stopPropagation();localStorage.setItem('zvBetaBannerOff','1');this.parentNode.style.display='none';" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);padding:6px 10px;font-size:14px;opacity:0.85;cursor:pointer;" aria-label="Dismiss">✕</span></a>
+  <script>
+    if (localStorage.getItem('zvBetaBannerOff') === '1') {
+      var zvB = document.getElementById('zv-beta-banner');
+      if (zvB) zvB.style.display = 'none';
+    }
+  </script>
   <picture id="splash">
       <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
       <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">

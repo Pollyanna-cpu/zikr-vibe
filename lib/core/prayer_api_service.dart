@@ -27,6 +27,7 @@ class PrayerApiService {
     double lat,
     double lng, {
     int? method, // 3 = MWL, 4 = Umm Al-Qura, 2 = ISNA
+    int school = 0, // Asr madhab: 0 = Shafi, 1 = Hanafi
   }) async {
     if (!isApiOptedIn()) return null; // Privacy default: stay local-only.
     try {
@@ -34,6 +35,7 @@ class PrayerApiService {
         'latitude': lat.toString(),
         'longitude': lng.toString(),
         'method': (method ?? 4).toString(), // default Umm Al-Qura
+        'school': school.toString(),
       };
       final uri = Uri.parse('$_baseUrl/timings/${DateTime.now().millisecondsSinceEpoch ~/ 1000}')
           .replace(queryParameters: params);

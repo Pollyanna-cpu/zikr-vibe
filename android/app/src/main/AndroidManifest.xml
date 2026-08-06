@@ -2,6 +2,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Adhan reminders at the exact minute. Android 12/13 grant this by
+         default; on 14+ the system may deny it, and the scheduler silently
+         falls back to inexact timing (see NotificationService). -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Required by Google Play in_app_purchase plugin. Without it, the IAP
          client connects but skin purchases fail to bind to the Play Store

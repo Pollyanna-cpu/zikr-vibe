@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -40,37 +41,82 @@ class NotificationService {
     _initialized = true;
   }
 
-  /// Schedule a prayer reminder
-  static Future<void> schedulePrayerReminder({
+  static const NotificationDetails _prayerDetails = NotificationDetails(
+    android: AndroidNotificationDetails(
+      'prayer_reminders',
+      'Prayer Reminders',
+      channelDescription: 'Notifications before prayer times',
+      importance: Importance.high,
+      priority: Priority.high,
+    ),
+    iOS: DarwinNotificationDetails(),
+  );
+
+  /// Prayer reminders own notification ids [100, 200) so they can be
+  /// cancelled as a block without touching anything else.
+  static const int prayerIdStart = 100;
+  static const int prayerIdEnd = 200;
+
+  /// Schedule one prayer reminder at an absolute time. Tries an exact alarm
+  /// first (Android 12 grants it by default; 14+ usually denies) and falls
+  /// back to inexact — which Doze may delay by up to ~15 minutes — rather
+  /// than dragging the user through the system settings page.
+  static Future<bool> schedulePrayerAt({
     required int id,
-    required String prayerName,
+    required String title,
+    required String body,
     required DateTime time,
-    int offsetMinutes = 10,
   }) async {
-    final scheduledTime = time.subtract(Duration(minutes: offsetMinutes));
-    if (scheduledTime.isBefore(DateTime.now())) return;
+    if (time.isBefore(DateTime.now())) return false;
+    final tzTime = tz.TZDateTime.from(time, tz.local);
 
-    final tzTime = tz.TZDateTime.from(scheduledTime, tz.local);
+    var mode = AndroidScheduleMode.inexactAllowWhileIdle;
+    if (!kIsWeb && Platform.isAndroid) {
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      final canExact = await android?.canScheduleExactNotifications() ?? false;
+      if (canExact) mode = AndroidScheduleMode.exactAllowWhileIdle;
+    }
 
-    await _plugin.zonedSchedule(
-      id,
-      'Prayer Time',
-      '$prayerName in $offsetMinutes minutes',
-      tzTime,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'prayer_reminders',
-          'Prayer Reminders',
-          channelDescription: 'Notifications before prayer times',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-    );
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tzTime,
+        _prayerDetails,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        androidScheduleMode: mode,
+      );
+      return true;
+    } on PlatformException {
+      // Exact permission revoked between check and call — retry inexact.
+      if (mode == AndroidScheduleMode.exactAllowWhileIdle) {
+        await _plugin.zonedSchedule(
+          id,
+          title,
+          body,
+          tzTime,
+          _prayerDetails,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        );
+        return true;
+      }
+      return false;
+    }
+  }
+
+  /// Cancel every pending prayer reminder, leaving other notifications alone.
+  static Future<void> cancelPrayerReminders() async {
+    final pending = await _plugin.pendingNotificationRequests();
+    for (final p in pending) {
+      if (p.id >= prayerIdStart && p.id < prayerIdEnd) {
+        await _plugin.cancel(p.id);
+      }
+    }
   }
 
   /// Circle nudge: "Your circle is 3/5 today"

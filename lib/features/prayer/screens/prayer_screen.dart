@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,9 +8,15 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
-import '../../../core/skin.dart';
+import '../../../core/hijri.dart';
 import '../../../core/prayer_api_service.dart';
+import '../../../core/prayer_scheduler.dart';
 import '../../../core/notifications.dart';
+import '../../../core/skin.dart';
+import '../data/cities.dart';
+import '../providers/prayer_settings_provider.dart';
+import 'adhkar_screen.dart';
+import 'prayer_settings_screen.dart';
 
 /// User pref: prayer reminders enabled (opt-in, off by default per PRD P0-13)
 final prayerRemindersEnabledProvider = StateProvider<bool>((ref) {
@@ -19,48 +26,74 @@ final prayerRemindersEnabledProvider = StateProvider<bool>((ref) {
 });
 
 final prayerDataProvider = FutureProvider<_PrayerData>((ref) async {
+  // Watching settings makes the whole screen recompute the moment the user
+  // changes method / madhab / city — no manual refresh plumbing.
+  final methodKey = ref.watch(prayerMethodProvider);
+  final madhab = ref.watch(prayerMadhabProvider);
+  final cityIndex = ref.watch(prayerCityProvider);
+  final info = methodByKey(methodKey);
+  final hanafi = madhab == 'hanafi';
+
   double? lat;
   double? lng;
   String locationName = '';
   bool isApproximate = false;
 
-  LocationPermission permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
-  }
+  if (cityIndex >= 0 && cityIndex < kCities.length) {
+    final city = kCities[cityIndex];
+    lat = city.lat;
+    lng = city.lng;
+    locationName = '${city.name}, ${city.country}';
+  } else {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
 
-  if (permission != LocationPermission.denied &&
-      permission != LocationPermission.deniedForever) {
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.low,
-        timeLimit: const Duration(seconds: 10),
-      );
-      lat = position.latitude;
-      lng = position.longitude;
-      locationName = '${lat.toStringAsFixed(2)}, ${lng.toStringAsFixed(2)}';
-    } catch (_) {
-      // Fall through to timezone-based estimate.
+    if (permission != LocationPermission.denied &&
+        permission != LocationPermission.deniedForever) {
+      try {
+        final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.low,
+          timeLimit: const Duration(seconds: 10),
+        );
+        lat = position.latitude;
+        lng = position.longitude;
+        locationName = '${lat.toStringAsFixed(2)}, ${lng.toStringAsFixed(2)}';
+      } catch (_) {
+        // Fall through to timezone-based estimate.
+      }
+    }
+
+    if (lat == null || lng == null) {
+      final offsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
+      var estLng = (offsetMinutes / 60.0) * 15.0;
+      if (estLng > 180) estLng -= 360;
+      if (estLng < -180) estLng += 360;
+      lat = 22.0;
+      lng = estLng;
+      locationName =
+          'Approximate (from timezone) — enable location or pick a city';
+      isApproximate = true;
     }
   }
 
-  if (lat == null || lng == null) {
-    final offsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
-    var estLng = (offsetMinutes / 60.0) * 15.0;
-    if (estLng > 180) estLng -= 360;
-    if (estLng < -180) estLng += 360;
-    lat = 22.0;
-    lng = estLng;
-    locationName = 'Approximate (from timezone) — enable location for precise times';
-    isApproximate = true;
-  }
+  // The 7-day reminder scheduler re-arms from these on boot, without GPS.
+  PrayerSettings.cacheCoords(lat, lng);
 
-  final apiTimes = await PrayerApiService.fetchByCoordinates(lat, lng);
-  if (apiTimes != null) {
-    return _buildFromApi(apiTimes, lat, lng, locationName,
-        isApproximate: isApproximate);
+  if (info.aladhanId != null) {
+    final apiTimes = await PrayerApiService.fetchByCoordinates(
+      lat,
+      lng,
+      method: info.aladhanId,
+      school: hanafi ? 1 : 0,
+    );
+    if (apiTimes != null) {
+      return _buildFromApi(apiTimes, lat, lng, locationName, info.label,
+          isApproximate: isApproximate);
+    }
   }
-  return _calculatePrayers(lat, lng, locationName,
+  return _calculatePrayers(lat, lng, locationName, info, hanafi,
       isApproximate: isApproximate);
 });
 
@@ -68,7 +101,8 @@ _PrayerData _buildFromApi(
   Map<String, String> timings,
   double lat,
   double lng,
-  String locationName, {
+  String locationName,
+  String methodLabel, {
   bool isApproximate = false,
 }) {
   final now = DateTime.now();
@@ -115,7 +149,7 @@ _PrayerData _buildFromApi(
     prayers: prayers,
     locationName: locationName,
     qiblaDirection: qiblaDirection,
-    method: 'Umm al-Qura (Aladhan API)',
+    method: '$methodLabel (online)',
     isApproximate: isApproximate,
   );
 }
@@ -123,11 +157,14 @@ _PrayerData _buildFromApi(
 _PrayerData _calculatePrayers(
   double lat,
   double lng,
-  String locationName, {
+  String locationName,
+  PrayerMethodInfo info,
+  bool hanafi, {
   bool isApproximate = false,
 }) {
   final coordinates = Coordinates(lat, lng);
-  final params = CalculationMethodParameters.ummAlQura();
+  final params = info.build();
+  params.madhab = hanafi ? Madhab.hanafi : Madhab.shafi;
   final now = DateTime.now();
   final prayerTimes = PrayerTimes(
     coordinates: coordinates,
@@ -161,7 +198,7 @@ _PrayerData _calculatePrayers(
     prayers: prayers,
     locationName: locationName,
     qiblaDirection: qiblaDirection,
-    method: 'Umm al-Qura',
+    method: info.label,
     isApproximate: isApproximate,
   );
 }
@@ -190,7 +227,22 @@ class PrayerScreen extends ConsumerWidget {
     final prayerAsync = ref.watch(prayerDataProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Prayer Times')),
+      appBar: AppBar(
+        title: const Text('Prayer Times'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.tune_rounded),
+            tooltip: 'Calculation & reminder settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const PrayerSettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: prayerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(
@@ -214,41 +266,89 @@ class _PrayerBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final skin = ref.watch(skinProvider);
+    final hijriAdjustment = ref.watch(hijriAdjustmentProvider);
+    final now = DateTime.now();
+    final hijri = HijriDate.fromGregorian(now, adjustment: hijriAdjustment);
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: skin.primary,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                const Icon(Icons.location_on_rounded,
-                    color: Colors.white, size: 24),
-                const SizedBox(height: 8),
-                Text(
-                  data.locationName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+          Stack(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: skin.primary,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Calculation: ${data.method}',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      hijri.format(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      DateFormat('EEEE, d MMMM yyyy').format(now),
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.location_on_rounded,
+                            color: Colors.white70, size: 16),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            data.locationName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Calculation: ${data.method}',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              // Second settings entry, inside the card: on web the AppBar is
+              // covered by the fixed beta banner in index.html, which would
+              // otherwise make settings unreachable there.
+              Positioned(
+                top: 4,
+                right: 4,
+                child: IconButton(
+                  icon: const Icon(Icons.tune_rounded,
+                      color: Colors.white70, size: 20),
+                  tooltip: 'Calculation & reminder settings',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const PrayerSettingsScreen()),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
 
           if (data.isApproximate) ...[
@@ -268,7 +368,7 @@ class _PrayerBody extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Times follow your phone’s timezone. Enable location for prayer times tied to your exact GPS coordinates.',
+                      'Times follow your phone’s timezone. Enable location — or pick a city in settings — for precise times.',
                       style: TextStyle(color: skin.inkMuted, fontSize: 12),
                     ),
                   ),
@@ -283,7 +383,7 @@ class _PrayerBody extends ConsumerWidget {
 
           const SizedBox(height: 12),
 
-          _ReminderToggle(prayers: data.prayers),
+          if (kIsWeb) const _WebReminderNote() else const _ReminderToggle(),
 
           const SizedBox(height: 12),
 
@@ -292,8 +392,9 @@ class _PrayerBody extends ConsumerWidget {
             isApproximate: data.isApproximate,
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
+          const _AdhkarEntryCard(),
 
           const SizedBox(height: 16),
         ],
@@ -309,24 +410,6 @@ class _PrayerTime {
   final DateTime dateTime;
 
   _PrayerTime(this.name, this.time, this.isNext, this.dateTime);
-}
-
-/// Schedule local notifications for the 5 obligatory daily prayers.
-/// Privacy: nothing leaves the device. Per PRD P0-13: opt-in only, off by default.
-Future<void> _schedulePrayerReminders(List<_PrayerTime> prayers) async {
-  await NotificationService.cancelAll();
-  const obligatory = {'Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'};
-  int id = 100;
-  for (final p in prayers) {
-    if (!obligatory.contains(p.name)) continue;
-    if (p.dateTime.isBefore(DateTime.now())) continue;
-    await NotificationService.schedulePrayerReminder(
-      id: id++,
-      prayerName: p.name,
-      time: p.dateTime,
-      offsetMinutes: 10,
-    );
-  }
 }
 
 class _PrayerCard extends ConsumerWidget {
@@ -386,17 +469,48 @@ class _PrayerCard extends ConsumerWidget {
   }
 }
 
-/// Opt-in toggle for prayer reminders. Schedules 10-min-before notifications
-/// for Fajr/Dhuhr/Asr/Maghrib/Isha. Cancels all when off.
-class _ReminderToggle extends ConsumerWidget {
-  final List<_PrayerTime> prayers;
+/// Web can't fire scheduled local notifications (no background timer API),
+/// so instead of a toggle that silently does nothing we say it plainly.
+class _WebReminderNote extends ConsumerWidget {
+  const _WebReminderNote();
 
-  const _ReminderToggle({required this.prayers});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: skin.surfaceCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: skin.divider),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.notifications_none_rounded,
+              color: skin.inkMuted, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Adhan reminders work in the Android app. On the web, times and qibla are always available.',
+              style: TextStyle(color: skin.inkMuted, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Opt-in toggle. On: arms the next 7 days of reminders (per-prayer choices
+/// and lead time live in settings). Off: cancels the whole block.
+class _ReminderToggle extends ConsumerWidget {
+  const _ReminderToggle();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final skin = ref.watch(skinProvider);
     final enabled = ref.watch(prayerRemindersEnabledProvider);
+    final offset = ref.watch(prayerReminderOffsetProvider);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -432,7 +546,9 @@ class _ReminderToggle extends ConsumerWidget {
                 ),
                 Text(
                   enabled
-                      ? '10 min before each prayer'
+                      ? (offset == 0
+                          ? 'At prayer time · next 7 days'
+                          : '$offset min before · next 7 days')
                       : 'Off by default. Your dhikr stays private.',
                   style: TextStyle(color: skin.inkMuted, fontSize: 12),
                 ),
@@ -446,21 +562,77 @@ class _ReminderToggle extends ConsumerWidget {
               Hive.box('settings').put('prayer_reminders_enabled', val);
               ref.read(prayerRemindersEnabledProvider.notifier).state = val;
               if (val) {
-                await _schedulePrayerReminders(prayers);
+                final count = await PrayerScheduler.reschedule();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Prayer reminders enabled'),
-                      duration: Duration(seconds: 2),
+                    SnackBar(
+                      content: Text(count > 0
+                          ? 'Reminders set for the next $count prayers'
+                          : 'Reminders will start once times are loaded'),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 }
               } else {
-                await NotificationService.cancelAll();
+                await NotificationService.cancelPrayerReminders();
               }
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Entry to the bundled adhkar collection — fully offline, no account.
+class _AdhkarEntryCard extends ConsumerWidget {
+  const _AdhkarEntryCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final skin = ref.watch(skinProvider);
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const AdhkarScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: skin.surfaceCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: skin.divider),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.auto_stories_rounded, color: skin.primary, size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Morning & Evening Adhkar',
+                    style: TextStyle(
+                      color: skin.ink,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Foundational remembrances, offline',
+                    style: TextStyle(color: skin.inkMuted, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: skin.inkMuted),
+          ],
+        ),
       ),
     );
   }
