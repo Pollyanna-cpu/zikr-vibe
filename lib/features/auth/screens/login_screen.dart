@@ -43,6 +43,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _signInWithApple() async {
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authServiceProvider).signInWithApple();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Apple sign in failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   /// Pragmatic email check — RFC 5322 is huge but in practice this catches
   /// the typos testers actually make ("user@" / "user.com" / "user@domain").
   static final _emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -163,7 +178,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   foregroundColor: skin.ink,
                 ),
 
-                // TODO: Apple Sign In — add when Apple Developer account is ready
+                const SizedBox(height: 12),
+
+                // Apple Sign In
+                _SocialButton(
+                  onPressed: _isLoading ? null : _signInWithApple,
+                  icon: Icons.apple,
+                  label: 'Continue with Apple',
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                ),
 
                 const SizedBox(height: 12),
 
